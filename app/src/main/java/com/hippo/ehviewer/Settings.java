@@ -404,17 +404,12 @@ public class Settings {
 
     public static String getLaunchPageGalleryListSceneAction() {
         int value = getIntFromStr(KEY_LAUNCH_PAGE, DEFAULT_LAUNCH_PAGE);
-        switch (value) {
-            default:
-            case 0:
-                return GalleryListScene.ACTION_HOMEPAGE;
-            case 1:
-                return GalleryListScene.ACTION_SUBSCRIPTION;
-            case 2:
-                return GalleryListScene.ACTION_WHATS_HOT;
-            case 3:
-                return GalleryListScene.ACTION_TOP_LIST;
-        }
+        return switch (value) {
+            case 1 -> GalleryListScene.ACTION_SUBSCRIPTION;
+            case 2 -> GalleryListScene.ACTION_WHATS_HOT;
+            case 3 -> GalleryListScene.ACTION_TOP_LIST;
+            default -> GalleryListScene.ACTION_HOMEPAGE;
+        };
     }
 
     public static int getListMode() {
@@ -427,12 +422,10 @@ public class Settings {
 
     @DimenRes
     public static int getDetailSizeResId() {
-        switch (getDetailSize()) {
-            default:
-            case 0:
-                return R.dimen.gallery_list_column_width_long;
-            case 1:
-                return R.dimen.gallery_list_column_width_short;
+        if (getDetailSize() == 0){
+            return R.dimen.gallery_list_column_width_long;
+        } else {
+            return R.dimen.gallery_list_column_width_short;
         }
     }
 
