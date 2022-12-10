@@ -70,7 +70,7 @@ public class Settings {
     private static final String KEY_SHOW_JPN_TITLE = "show_jpn_title";
     private static final boolean DEFAULT_SHOW_JPN_TITLE = false;
     private static final String KEY_SHOW_GALLERY_PAGES = "show_gallery_pages";
-    private static final boolean DEFAULT_SHOW_GALLERY_PAGES = true;
+    private static final boolean DEFAULT_SHOW_GALLERY_PAGES = false;
     private static final String KEY_SHOW_COMMENTS = "show_gallery_comments";
     private static final boolean DEFAULT_SHOW_COMMENTS = true;
     public static final String KEY_SHOW_TAG_TRANSLATIONS = "show_tag_translations";
@@ -115,7 +115,7 @@ public class Settings {
     private static final String KEY_CUSTOM_SCREEN_LIGHTNESS = "custom_screen_lightness";
     private static final boolean DEFAULT_CUSTOM_SCREEN_LIGHTNESS = false;
     private static final String KEY_SCREEN_LIGHTNESS = "screen_lightness";
-    private static final int DEFAULT_SCREEN_LIGHTNESS = 50;
+    private static final int DEFAULT_SCREEN_LIGHTNESS = 5;
     /********************
      ****** Download
      ********************/
@@ -127,7 +127,7 @@ public class Settings {
     public static final String KEY_MEDIA_SCAN = "media_scan";
     private static final boolean DEFAULT_MEDIA_SCAN = false;
     private static final String KEY_MULTI_THREAD_DOWNLOAD = "download_thread";
-    private static final int DEFAULT_MULTI_THREAD_DOWNLOAD = 3;
+    private static final int DEFAULT_MULTI_THREAD_DOWNLOAD = 7;
     private static final String KEY_DOWNLOAD_DELAY = "download_delay";
     private static final int DEFAULT_DOWNLOAD_DELAY = 0;
     private static final String KEY_PRELOAD_IMAGE = "preload_image";
@@ -151,7 +151,7 @@ public class Settings {
     private static final String KEY_SAVE_PARSE_ERROR_BODY = "save_parse_error_body";
     private static final boolean DEFAULT_SAVE_PARSE_ERROR_BODY = true;
     private static final String KEY_SAVE_CRASH_LOG = "save_crash_log";
-    private static final boolean DEFAULT_SAVE_CRASH_LOG = true;
+    private static final boolean DEFAULT_SAVE_CRASH_LOG = false;
     private static final String KEY_READ_CACHE_SIZE = "read_cache_size";
     private static final int DEFAULT_READ_CACHE_SIZE = 320;
     public static final String KEY_APP_LANGUAGE = "app_language";
@@ -163,9 +163,9 @@ public class Settings {
     private static final String KEY_PROXY_PORT = "proxy_port";
     private static final int DEFAULT_PROXY_PORT = -1;
     private static final String KEY_BUILT_IN_HOSTS = "built_in_hosts_2";
-    private static final boolean DEFAULT_BUILT_IN_HOSTS = false;
+    private static final boolean DEFAULT_BUILT_IN_HOSTS = true;
     private static final String KEY_DOMAIN_FRONTING = "domain_fronting";
-    private static final boolean DEFAULT_DOMAIN_FRONTING = false;
+    private static final boolean DEFAULT_DOMAIN_FRONTING = true;
     private static final String KEY_APP_LINK_VERIFY_TIP = "app_link_verify_tip";
     private static final boolean DEFAULT_APP_LINK_VERIFY_TIP = false;
     /********************
@@ -207,22 +207,22 @@ public class Settings {
     private static final String KEY_RECENT_FAV_CAT = "recent_fav_cat";
     private static final int DEFAULT_RECENT_FAV_CAT = FavListUrlBuilder.FAV_CAT_ALL;
     // -1 for local, 0 - 9 for cloud favorite, other for no default fav slot
-    public static final int INVALID_DEFAULT_FAV_SLOT = -2;
+    public static final int INVALID_DEFAULT_FAV_SLOT = 0;
     private static final String KEY_DEFAULT_FAV_SLOT = "default_favorite_2";
     private static final int DEFAULT_DEFAULT_FAV_SLOT = INVALID_DEFAULT_FAV_SLOT;
     /********************
      ****** Guide
      ********************/
     private static final String KEY_GUIDE_QUICK_SEARCH = "guide_quick_search";
-    private static final boolean DEFAULT_GUIDE_QUICK_SEARCH = true;
+    private static final boolean DEFAULT_GUIDE_QUICK_SEARCH = false;
     private static final String KEY_GUIDE_COLLECTIONS = "guide_collections";
-    private static final boolean DEFAULT_GUIDE_COLLECTIONS = true;
+    private static final boolean DEFAULT_GUIDE_COLLECTIONS = false;
     private static final String KEY_GUIDE_DOWNLOAD_THUMB = "guide_download_thumb";
-    private static final boolean DEFAULT_GUIDE_DOWNLOAD_THUMB = true;
+    private static final boolean DEFAULT_GUIDE_DOWNLOAD_THUMB = false;
     private static final String KEY_GUIDE_DOWNLOAD_LABELS = "guide_download_labels";
-    private static final boolean DEFAULT_GUIDE_DOWNLOAD_LABELS = true;
+    private static final boolean DEFAULT_GUIDE_DOWNLOAD_LABELS = false;
     private static final String KEY_GUIDE_GALLERY = "guide_gallery";
-    private static final boolean DEFAULT_GUIDE_GALLERY = true;
+    private static final boolean DEFAULT_GUIDE_GALLERY = false;
     /********************
      ****** Others
      ********************/
@@ -230,7 +230,7 @@ public class Settings {
     private static final String KEY_VERSION_CODE = "version_code";
     private static final int DEFAULT_VERSION_CODE = 0;
     private static final String KEY_SHOW_WARNING = "show_warning";
-    private static final boolean DEFAULT_SHOW_WARNING = true;
+    private static final boolean DEFAULT_SHOW_WARNING = false;
     private static final String KEY_SELECT_SITE = "select_site";
     private static final boolean DEFAULT_SELECT_SITE = true;
     private static final String KEY_NEED_SIGN_IN = "need_sign_in";
@@ -240,7 +240,7 @@ public class Settings {
     private static final String KEY_AVATAR = "avatar";
     private static final String DEFAULT_AVATAR = null;
     private static final String KEY_QUICK_SEARCH_TIP = "quick_search_tip";
-    private static final boolean DEFAULT_QUICK_SEARCH_TIP = true;
+    private static final boolean DEFAULT_QUICK_SEARCH_TIP = false;
     private static final String KEY_HAS_DEFAULT_DOWNLOAD_LABEL = "has_default_download_label";
     private static final boolean DEFAULT_HAS_DOWNLOAD_LABEL = false;
     private static final String KEY_DEFAULT_DOWNLOAD_LABEL = "default_download_label";
