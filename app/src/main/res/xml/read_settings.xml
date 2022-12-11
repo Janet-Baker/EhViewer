@@ -118,7 +118,7 @@
         app:iconSpaceReserved="false" />
 
     <SeekBarPreference
-        android:defaultValue="50"
+        android:defaultValue="5"
         android:dependency="custom_screen_lightness"
         android:key="screen_lightness"
         android:title="@string/settings_read_screen_lightness"

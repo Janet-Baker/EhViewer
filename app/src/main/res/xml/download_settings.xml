@@ -31,7 +31,7 @@
         app:summaryOn="@string/settings_download_media_scan_summary_on" />
 
     <rikka.preference.SimpleMenuPreference
-        android:defaultValue="3"
+        android:defaultValue="7"
         android:key="download_thread"
         android:summary="@string/settings_download_multi_thread_download_summary"
         android:title="@string/settings_download_multi_thread_download"
