@@ -127,7 +127,7 @@ public class Settings {
     public static final String KEY_MEDIA_SCAN = "media_scan";
     private static final boolean DEFAULT_MEDIA_SCAN = false;
     private static final String KEY_MULTI_THREAD_DOWNLOAD = "download_thread";
-    private static final int DEFAULT_MULTI_THREAD_DOWNLOAD = 7;
+    private static final int DEFAULT_MULTI_THREAD_DOWNLOAD = 16;
     private static final String KEY_DOWNLOAD_DELAY = "download_delay";
     private static final int DEFAULT_DOWNLOAD_DELAY = 0;
     private static final String KEY_PRELOAD_IMAGE = "preload_image";
@@ -285,8 +285,7 @@ public class Settings {
     }
 
     private static EhConfig loadEhConfig() {
-        EhConfig ehConfig = new EhConfig();
-        return ehConfig;
+        return new EhConfig();
     }
 
     public static boolean getBoolean(String key, boolean defValue) {
