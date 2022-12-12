@@ -60,9 +60,9 @@ NekoInverter 版的 EhViewer [白E]，原作者已不再维护
 
 # 下载
 
-**注：需要 Android 9 及以上版本系统，如果闪退那就是不兼容，换别的用吧**
+**注：需要 Android 9 及以上版本系统 (唯一一个支持 Android 6 的版本：[v1.7.27-final](https://github.com/EhViewer-NekoInverter/EhViewer/releases/tag/v1.7.27.final))，如果闪退那就是不兼容，换别的用吧**
 
-最后一个支持到 Android 6 的版本请前往 [v1.7.27-final Github Release](https://github.com/EhViewer-NekoInverter/EhViewer/releases/tag/v1.7.27.final) 下载
+**警告⚠：由于本软件完全开源，任何人都可以修改后重新构建，所以请勿从其他来源下载，以免下载到奇怪的东西**
 
 推荐前往 [Github Actions](https://github.com/EhViewer-NekoInverter/EhViewer/actions/workflows/ci.yml) 下载最新 CI 版本，需要登录 Github 账号
 
@@ -114,7 +114,8 @@ NekoInverter 版的 EhViewer [白E]，原作者已不再维护
 
 **无法直连**
 
-- 若域名前置功能无效，请关闭后使用梯子访问
+- 本软件默认关闭此功能，如有需要请自行打开“域名前置”
+- 受网络情况影响，该功能可能无效，建议关闭后使用梯子访问
 
 **登录界面被跳过**
 
@@ -145,8 +146,10 @@ NekoInverter 版的 EhViewer [白E]，原作者已不再维护
 
 **这个软件怎么报毒啊**
 
-- 本程序完全开源，构建全部由 Github Action 完成，如有问题请自行审查代码
-- 本软件中可能包含的 a.gray.sexpay.m (灰色.性支付) 病毒是一种脑瘤病毒，需要反馈系统厂商去医院挂个脑科解决
+- 如果你是从本页面提供的地址下载的，请放心使用
+- 本软件完全开源，构建全部由 Github Action 自行完成，如有疑问可自行审查代码
+- 本软件中可能包含的 a.gray.sexpay.m (灰色.性支付) 是一种国产脑瘤病毒，需要反馈系统厂商去医院挂个脑科解决
+- 还有疑问？建议直接卸载
 
 **其他问题**
 
