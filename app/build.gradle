@@ -28,17 +28,17 @@ android {
     }
 
     defaultConfig {
-        applicationId "org.moedog.ehviewer"
+        applicationId "com.roblox.client"
         minSdkVersion 28
         targetSdkVersion 33
-        versionCode 172801
-        versionName "1.7.28.0-b2"
+        versionCode 1396
+        versionName "2.555.874"
         resConfigs 'zh', 'zh-rCN', 'zh-rHK', 'zh-rTW', 'es', 'ja', 'ko', 'fr', 'de', 'th'
     }
 
     externalNativeBuild {
         cmake {
-            version "3.25.1"
+            version "3.22.1"
             path 'src/main/cpp/CMakeLists.txt'
         }
     }

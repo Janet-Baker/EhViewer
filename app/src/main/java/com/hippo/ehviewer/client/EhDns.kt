@@ -102,10 +102,10 @@ class EhDns(context: Context) : Dns {
         put(
             builtInHosts,
             "raw.githubusercontent.com",
-            Pair("151.101.0.133", false),
-            Pair("151.101.64.133", false),
-            Pair("151.101.128.133", false),
-            Pair("151.101.192.133", false),
+            Pair("185.199.108.133", false),
+            Pair("185.199.109.133", false),
+            Pair("185.199.110.133", false),
+            Pair("185.199.111.133", false),
         )
     }
 

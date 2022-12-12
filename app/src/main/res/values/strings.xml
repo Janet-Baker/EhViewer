@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="app_name">EhViewer</string>
+    <string name="app_name">Roblox</string>
 
     <string name="site_e" translatable="false">e-hentai</string>
     <string name="site_ex" translatable="false">exhentai</string>
@@ -510,7 +510,6 @@
     <string name="settings_download_media_scan_summary_on">Please hide your gallery apps away from other people</string>
     <string name="settings_download_media_scan_summary_off">Most gallery apps will ignore pictures in the download path</string>
     <string name="settings_download_multi_thread_download">Multi-threaded download</string>
-    <string name="settings_download_multi_thread_download_summary">Up to %s images</string>
     <string name="settings_download_download_delay">Download delay</string>
     <string name="settings_download_download_delay_summary">Delay %s ms per download</string>
     <string name="settings_download_preload_image">Preload image</string>

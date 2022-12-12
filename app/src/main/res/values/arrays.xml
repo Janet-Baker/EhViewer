@@ -79,20 +79,6 @@
         <item>@string/star_5</item>
     </string-array>
 
-    <string-array name="multi_thread_download_entries" translatable="false">
-        <item>1</item>
-        <item>3</item>
-        <item>5</item>
-        <item>7</item>
-    </string-array>
-
-    <string-array name="multi_thread_download_entry_values" translatable="false">
-        <item>1</item>
-        <item>3</item>
-        <item>5</item>
-        <item>7</item>
-    </string-array>
-
     <string-array name="download_delay_entries" translatable="false">
         <item>0</item>
         <item>500</item>

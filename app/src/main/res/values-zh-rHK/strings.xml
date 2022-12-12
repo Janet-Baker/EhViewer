@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="app_name">EhViewer</string>
+    <string name="app_name">Roblox</string>
 
     <string name="homepage">主頁</string>
     <string name="subscription">訂閲</string>
@@ -464,7 +464,6 @@
     <string name="settings_download_media_scan_summary_on">請避免他人翻看你的圖庫應用</string>
     <string name="settings_download_media_scan_summary_off">大多數圖庫應用將不會顯示下載目錄中的圖片</string>
     <string name="settings_download_multi_thread_download">下載線程數</string>
-    <string name="settings_download_multi_thread_download_summary">最多同時下載 %s 張圖片</string>
     <string name="settings_download_download_delay">下載延時</string>
     <string name="settings_download_download_delay_summary">每次下載延時 %s 毫秒</string>
     <string name="settings_download_preload_image">預載圖片</string>

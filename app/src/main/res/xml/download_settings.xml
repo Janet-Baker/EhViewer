@@ -30,14 +30,13 @@
         app:summaryOff="@string/settings_download_media_scan_summary_off"
         app:summaryOn="@string/settings_download_media_scan_summary_on" />
 
-    <rikka.preference.SimpleMenuPreference
-        android:defaultValue="3"
+    <SeekBarPreference
+        android:defaultValue="16"
         android:key="download_thread"
-        android:summary="@string/settings_download_multi_thread_download_summary"
         android:title="@string/settings_download_multi_thread_download"
-        app:entries="@array/multi_thread_download_entries"
-        app:entryValues="@array/multi_thread_download_entry_values"
-        app:iconSpaceReserved="false" />
+        android:max="32"
+        app:iconSpaceReserved="false"
+        app:showSeekBarValue="true" />
 
     <rikka.preference.SimpleMenuPreference
         android:defaultValue="0"

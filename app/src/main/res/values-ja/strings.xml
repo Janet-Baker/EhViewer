@@ -16,7 +16,7 @@
 <!-- Japanese translations by UShimamura, trhjew, Rouryi and onlymash -->
 <resources>
 
-    <string name="app_name">EhViewer</string>
+    <string name="app_name">Roblox</string>
 
     <string name="homepage">ホームページ</string>
     <string name="subscription">タグの購読</string>
@@ -428,7 +428,6 @@
     <string name="settings_download_media_scan_summary_on">ギャラリーアプリを他人に見せないでください</string>
     <string name="settings_download_media_scan_summary_off">ほとんどのギャラリーアプリはダウンロードパスの内容を表示しません</string>
     <string name="settings_download_multi_thread_download">ダウンロードスレッド数</string>
-    <string name="settings_download_multi_thread_download_summary">同時に最大%s枚の画像をダウンロードできる</string>
     <string name="settings_download_preload_image">画像をプリロード</string>
     <string name="settings_download_preload_image_summary">%s枚の画像をプリロードします</string>
     <string name="settings_download_download_origin_image">オリジナル画像をダウンロード</string>

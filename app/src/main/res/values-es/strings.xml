@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="app_name">EhViewer</string>
+    <string name="app_name">Roblox</string>
 
     <string name="homepage">Página de inicio</string>
     <string name="subscription">Suscripción</string>
@@ -409,7 +409,6 @@
     <string name="settings_download_media_scan_summary_on">Las galerías de imágenes mostrarán los doujinshis/mangas descargados. ¡Cuidado con prestar tu móvil o tablet!</string>
     <string name="settings_download_media_scan_summary_off">Las de galería de imágenes no mostrarán los doujinshis/mangas descargados</string>
     <string name="settings_download_multi_thread_download">Multi-hilos al descargar</string>
-    <string name="settings_download_multi_thread_download_summary">Máximo de %s imágenes</string>
     <string name="settings_download_preload_image">Precargar imagen</string>
     <string name="settings_download_preload_image_summary">Precargar las siguientes %s imágenes</string>
     <string name="settings_download_download_origin_image">Descargar imagen original</string>

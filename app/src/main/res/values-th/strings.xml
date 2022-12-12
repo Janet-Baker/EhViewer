@@ -16,7 +16,7 @@
 
 <resources>
 
-    <string name="app_name">EhViewer</string>
+    <string name="app_name">Roblox</string>
 
     <string name="homepage">หน้าหลัก</string>
     <string name="whats_hot">เรื่องที่กำลังมาแรงมากๆ</string>
@@ -403,7 +403,6 @@
     <string name="settings_download_media_scan_summary_on">โปรดซ่อนแอปแกลเลอรี่หรือแอปดูรูปในเครื่องของคุณจากคนอื่นด้วย</string>
     <string name="settings_download_media_scan_summary_off">แอปแกลเลอรี่ส่วนใหญ่จะข้ามการสแกนรูปภาพในแหล่งดาวน์โหลด</string>
     <string name="settings_download_multi_thread_download">ดาวน์โหลดแบบหลายเธด</string>
-    <string name="settings_download_multi_thread_download_summary">โหลดถึง %s ภาพ</string>
     <string name="settings_download_preload_image">โหลดภาพล่วงหน้า</string>
     <string name="settings_download_preload_image_summary">โหลดภาพล่วงหน้าไป %s ภาพ</string>
     <string name="settings_download_download_origin_image">ดาวน์โหลดรูปภาพต้นฉบับ</string>
@@ -538,4 +537,5 @@
 
     <string name="download_service">บริการดาวน์โหลด</string>
     <string name="favorite_name">รายการโปรด</string>
+    <string name="subscription">เซ็น</string>
 </resources>
