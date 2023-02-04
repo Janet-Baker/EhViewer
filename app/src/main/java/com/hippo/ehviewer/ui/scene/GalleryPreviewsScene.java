@@ -65,6 +65,7 @@ import java.util.Locale;
 public class GalleryPreviewsScene extends ToolbarScene {
 
     public static final String KEY_GALLERY_INFO = "gallery_info";
+    public static final String KEY_SCROLL_TO = "scroll_to";
     private final static String KEY_HAS_FIRST_REFRESH = "has_first_refresh";
 
     /*---------------
@@ -89,6 +90,8 @@ public class GalleryPreviewsScene extends ToolbarScene {
 
     private boolean mHasFirstRefresh = false;
 
+    private int mScrollTo;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,6 +113,7 @@ public class GalleryPreviewsScene extends ToolbarScene {
         }
 
         mGalleryInfo = args.getParcelable(KEY_GALLERY_INFO);
+        mScrollTo = args.getInt(KEY_SCROLL_TO);
     }
 
     private void onRestore(@NonNull Bundle savedInstanceState) {
@@ -142,11 +146,10 @@ public class GalleryPreviewsScene extends ToolbarScene {
 
         Context context = getContext();
         AssertUtils.assertNotNull(context);
-        Resources resources = context.getResources();
 
         mAdapter = new GalleryPreviewAdapter();
         mRecyclerView.setAdapter(mAdapter);
-        int columnWidth = Settings.getThumbSize();
+        int columnWidth = Settings.getPreviewSize();
         AutoGridLayoutManager layoutManager = new AutoGridLayoutManager(context, columnWidth, LayoutUtils.dp2pix(context, 16));
         layoutManager.setStrategy(AutoGridLayoutManager.STRATEGY_SUITABLE_SIZE);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -161,7 +164,12 @@ public class GalleryPreviewsScene extends ToolbarScene {
         // Only refresh for the first time
         if (!mHasFirstRefresh) {
             mHasFirstRefresh = true;
-            mHelper.firstRefresh();
+            if (mScrollTo == -1) {
+                mHelper.goTo(1);
+                mScrollTo = 0;
+            } else {
+                mHelper.firstRefresh();
+            }
         }
 
         return mContentLayout;
@@ -252,7 +260,12 @@ public class GalleryPreviewsScene extends ToolbarScene {
                 list.add(previewSet.getGalleryPreview(mGalleryInfo.gid, i));
             }
 
-            mHelper.onGetPageData(taskId, result.second, 0, list);
+            mHelper.onGetPageData(taskId, result.second, 0, null, null, list);
+
+            if (mScrollTo != 0 && mScrollTo < size) {
+                mHelper.scrollTo(mScrollTo);
+                mScrollTo = 0;
+            }
         }
     }
 
@@ -348,7 +361,7 @@ public class GalleryPreviewsScene extends ToolbarScene {
     private class GalleryPreviewHelper extends ContentLayout.ContentHelper<GalleryPreview> {
 
         @Override
-        protected void getPageData(final int taskId, int type, int page) {
+        protected void getPageData(final int taskId, int type, int page, String index, boolean isNext) {
             MainActivity activity = getMainActivity();
             if (null == activity || null == mClient || null == mGalleryInfo) {
                 onGetException(taskId, new EhException(getString(R.string.error_cannot_find_gallery)));
@@ -373,13 +386,6 @@ public class GalleryPreviewsScene extends ToolbarScene {
         protected void notifyDataSetChanged() {
             if (mAdapter != null) {
                 mAdapter.notifyDataSetChanged();
-            }
-        }
-
-        @Override
-        protected void notifyItemRangeRemoved(int positionStart, int itemCount) {
-            if (mAdapter != null) {
-                mAdapter.notifyItemRangeRemoved(positionStart, itemCount);
             }
         }
 

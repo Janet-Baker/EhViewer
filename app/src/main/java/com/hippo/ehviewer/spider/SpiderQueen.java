@@ -61,7 +61,6 @@ import com.hippo.yorozuya.IOUtils;
 import com.hippo.yorozuya.MathUtils;
 import com.hippo.yorozuya.OSUtils;
 import com.hippo.yorozuya.StringUtils;
-import com.hippo.yorozuya.Utilities;
 import com.hippo.yorozuya.collect.SparseJLArray;
 import com.hippo.yorozuya.thread.PriorityThread;
 import com.hippo.yorozuya.thread.PriorityThreadFactory;
@@ -358,29 +357,22 @@ public final class SpiderQueen implements Runnable {
 
     private void setMode(@Mode int mode) {
         switch (mode) {
-            case MODE_READ:
-                mReadReference++;
-                break;
-            case MODE_DOWNLOAD:
-                mDownloadReference++;
-                break;
+            case MODE_READ -> mReadReference++;
+            case MODE_DOWNLOAD -> mDownloadReference++;
         }
 
         if (mDownloadReference > 1) {
-            throw new IllegalStateException("mDownloadReference can't more than 0");
+            throw new IllegalStateException("mDownloadReference can't more than 1");
         }
 
         updateMode();
+        writeSpiderInfoToLocal();
     }
 
     private void clearMode(@Mode int mode) {
         switch (mode) {
-            case MODE_READ:
-                mReadReference--;
-                break;
-            case MODE_DOWNLOAD:
-                mDownloadReference--;
-                break;
+            case MODE_READ -> mReadReference--;
+            case MODE_DOWNLOAD -> mDownloadReference--;
         }
 
         if (mReadReference < 0 || mDownloadReference < 0) {
@@ -523,29 +515,25 @@ public final class SpiderQueen implements Runnable {
         Object result;
 
         switch (state) {
-            default:
-            case STATE_NONE:
-                result = null;
-                break;
-            case STATE_DOWNLOADING:
-                result = mPagePercentMap.get(index);
-                break;
-            case STATE_FAILED:
+            case STATE_NONE -> result = null;
+            case STATE_DOWNLOADING -> result = mPagePercentMap.get(index);
+            case STATE_FAILED -> {
                 String error = mPageErrorMap.get(index);
                 if (error == null) {
                     error = GetText.getString(R.string.error_unknown);
                 }
                 result = error;
-                break;
-            case STATE_FINISHED:
+            }
+            case STATE_FINISHED -> {
                 synchronized (mDecodeRequestQueue) {
                     if (!contain(mDecodeIndexArray, index) && !mDecodeRequestQueue.contains(index)) {
                         mDecodeRequestQueue.add(index);
-                        mDecodeRequestQueue.notify();
+                        mDecodeRequestQueue.notifyAll();
                     }
                 }
                 result = null;
-                break;
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + state);
         }
 
         tryToEnsureWorkers();
@@ -645,7 +633,6 @@ public final class SpiderQueen implements Runnable {
             return null;
         }
 
-        OutputStream os = null;
         try {
             pipe.obtain();
 
@@ -661,7 +648,6 @@ public final class SpiderQueen implements Runnable {
         } finally {
             pipe.close();
             pipe.release();
-            IOUtils.closeQuietly(os);
         }
     }
 
@@ -751,14 +737,13 @@ public final class SpiderQueen implements Runnable {
     }
 
     private SpiderInfo readSpiderInfoFromInternet() {
-        try {
-            SpiderInfo spiderInfo = new SpiderInfo();
-            spiderInfo.gid = mGalleryInfo.gid;
-            spiderInfo.token = mGalleryInfo.token;
+        SpiderInfo spiderInfo = new SpiderInfo();
+        spiderInfo.gid = mGalleryInfo.gid;
+        spiderInfo.token = mGalleryInfo.token;
 
-            Request request = new EhRequestBuilder(EhUrl.getGalleryDetailUrl(
-                    mGalleryInfo.gid, mGalleryInfo.token, 0, false), EhUrl.getReferer()).build();
-            Response response = mHttpClient.newCall(request).execute();
+        Request request = new EhRequestBuilder(EhUrl.getGalleryDetailUrl(
+                mGalleryInfo.gid, mGalleryInfo.token, 0, false), EhUrl.getReferer()).build();
+        try (Response response = mHttpClient.newCall(request).execute()) {
             String body = response.body().string();
 
             spiderInfo.pages = GalleryDetailParser.parsePages(body);
@@ -777,15 +762,14 @@ public final class SpiderQueen implements Runnable {
             return null;
         }
 
-        try {
-            String url = EhUrl.getGalleryMultiPageViewerUrl(
-                    mGalleryInfo.gid, mGalleryInfo.token);
-            if (DEBUG_PTOKEN) {
-                Log.d(TAG, "getPTokenFromMultiPageViewer index " + index + ", url " + url);
-            }
-            String referer = EhUrl.getReferer();
-            Request request = new EhRequestBuilder(url, referer).build();
-            Response response = mHttpClient.newCall(request).execute();
+        String url = EhUrl.getGalleryMultiPageViewerUrl(
+                mGalleryInfo.gid, mGalleryInfo.token);
+        if (DEBUG_PTOKEN) {
+            Log.d(TAG, "getPTokenFromMultiPageViewer index " + index + ", url " + url);
+        }
+        String referer = EhUrl.getReferer();
+        Request request = new EhRequestBuilder(url, referer).build();
+        try (Response response = mHttpClient.newCall(request).execute()) {
             String body = response.body().string();
 
             ArrayList<String> list = GalleryMultiPageViewerPTokenParser.parse(body);
@@ -824,16 +808,15 @@ public final class SpiderQueen implements Runnable {
             previewIndex = Math.min(previewIndex, spiderInfo.previewPages - 1);
         }
 
-        try {
-            String url = EhUrl.getGalleryDetailUrl(
-                    mGalleryInfo.gid, mGalleryInfo.token, previewIndex, false);
-            String referer = EhUrl.getReferer();
-            if (DEBUG_PTOKEN) {
-                Log.d(TAG, "index " + index + ", previewIndex " + previewIndex +
-                        ", previewPerPage " + spiderInfo.previewPerPage + ", url " + url);
-            }
-            Request request = new EhRequestBuilder(url, referer).build();
-            Response response = mHttpClient.newCall(request).execute();
+        String url = EhUrl.getGalleryDetailUrl(
+                mGalleryInfo.gid, mGalleryInfo.token, previewIndex, false);
+        String referer = EhUrl.getReferer();
+        if (DEBUG_PTOKEN) {
+            Log.d(TAG, "index " + index + ", previewIndex " + previewIndex +
+                    ", previewPerPage " + spiderInfo.previewPerPage + ", url " + url);
+        }
+        Request request = new EhRequestBuilder(url, referer).build();
+        try (Response response = mHttpClient.newCall(request).execute()) {
             String body = response.body().string();
             readPreviews(body, previewIndex, spiderInfo);
 
@@ -851,6 +834,13 @@ public final class SpiderQueen implements Runnable {
         }
     }
 
+    private void writeSpiderInfoToLocal() {
+        var spiderInfo = mSpiderInfo.get();
+        if (spiderInfo != null) {
+            writeSpiderInfoToLocal(spiderInfo);
+        }
+    }
+
     private synchronized void writeSpiderInfoToLocal(@NonNull SpiderInfo spiderInfo) {
         // Write to download dir
         UniFile downloadDir = mSpiderDen.getDownloadDir();
@@ -858,7 +848,7 @@ public final class SpiderQueen implements Runnable {
             UniFile file = downloadDir.createFile(SPIDER_INFO_FILENAME);
             try {
                 spiderInfo.write(file.openOutputStream());
-            } catch (Throwable e) {
+            } catch (IOException e) {
                 ExceptionUtils.throwIfFatal(e);
                 // Ignore
             }
@@ -1150,7 +1140,7 @@ public final class SpiderQueen implements Runnable {
         }
 
         // false for stop
-        private boolean downloadImage(long gid, int index, String pToken, String previousPToken, boolean force) {
+        private boolean downloadImage(long gid, int index, String pToken, String previousPToken) {
             String skipHathKey = null;
             List<String> skipHathKeys = new ArrayList<>(5);
             String originImageUrl = null;
@@ -1247,7 +1237,7 @@ public final class SpiderQueen implements Runnable {
 
                 String targetImageUrl;
                 String referer;
-                if (Settings.getDownloadOriginImage() && !TextUtils.isEmpty(originImageUrl)) {
+                if (Settings.getDownloadOriginImage(mDownloadReference > 0) && !TextUtils.isEmpty(originImageUrl)) {
                     targetImageUrl = originImageUrl;
                     referer = EhUrl.getPageUrl(gid, index, pToken);
                 } else {
@@ -1284,21 +1274,11 @@ public final class SpiderQueen implements Runnable {
                         continue;
                     }
 
-                    if (responseBody == null) {
-                        error = "Empty response body";
-                        forceHtml = true;
-                        continue;
-                    }
-
                     // Get extension
                     String extension = null;
                     MediaType mediaType = responseBody.contentType();
                     if (mediaType != null) {
                         extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mediaType.toString());
-                    }
-                    // Ensure extension
-                    if (!Utilities.contain(GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS, extension)) {
-                        extension = GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS[0];
                     }
 
                     OutputStreamPipe osPipe = null;
@@ -1415,11 +1395,13 @@ public final class SpiderQueen implements Runnable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    Thread.sleep(0); // to make allow to catch InterruptedException
                     return true;
                 } catch (IOException e) {
                     e.printStackTrace();
                     error = GetText.getString(R.string.error_socket);
                     forceHtml = true;
+                } catch (InterruptedException ignored) {
                 } finally {
                     IOUtils.closeQuietly(is);
 
@@ -1575,7 +1557,7 @@ public final class SpiderQueen implements Runnable {
             }
 
             // Get image url
-            return downloadImage(mGid, index, pToken, previousPToken, force);
+            return downloadImage(mGid, index, pToken, previousPToken);
         }
 
         @Override
@@ -1596,7 +1578,7 @@ public final class SpiderQueen implements Runnable {
                     Log.e(TAG, "WTF, mWorkerCount < 0, not thread safe or something wrong");
                     mWorkerCount = 0;
                 }
-                finish = mWorkerCount <= 0;
+                finish = mWorkerCount == 0;
             }
 
             if (finish) {

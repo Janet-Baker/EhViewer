@@ -94,7 +94,9 @@ import com.hippo.ehviewer.client.data.GalleryTagGroup;
 import com.hippo.ehviewer.client.data.ListUrlBuilder;
 import com.hippo.ehviewer.client.data.PreviewSet;
 import com.hippo.ehviewer.client.exception.NoHAtHClientException;
+import com.hippo.ehviewer.client.parser.ArchiveParser;
 import com.hippo.ehviewer.client.parser.RateGalleryParser;
+import com.hippo.ehviewer.client.parser.TorrentParser;
 import com.hippo.ehviewer.client.parser.VoteTagParser;
 import com.hippo.ehviewer.dao.DownloadInfo;
 import com.hippo.ehviewer.dao.Filter;
@@ -270,7 +272,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
     @Nullable
     private GalleryDetail mGalleryDetail;
     private int mRequestId = IntIdGenerator.INVALID_ID;
-    private Pair<String, String>[] mTorrentList;
+    private List<TorrentParser.Result> mTorrentList;
     ActivityResultLauncher<String> requestStoragePermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             result -> {
@@ -285,7 +287,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                 }
             });
     private String mArchiveFormParamOr;
-    private Pair<String, String>[] mArchiveList;
+    private List<ArchiveParser.Archive> mArchiveList;
     @State
     private int mState = STATE_INIT;
     private boolean mModifyingFavorites;
@@ -1044,7 +1046,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             mPreviewText.setText(R.string.more_previews);
         }
 
-        int columnWidth = Settings.getThumbSize();
+        int columnWidth = Settings.getPreviewSize();
         mGridLayout.setColumnSize(columnWidth);
         mGridLayout.setStrategy(SimpleGridAutoSpanLayout.STRATEGY_SUITABLE_SIZE);
         int size = Math.min(previewSet.size(), previewNum);
@@ -1105,7 +1107,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                     return false;
                 }
                 if (mGalleryDetail.apiUid < 0) {
-                    showTip(R.string.sign_in_first, LENGTH_LONG);
+                    showTip(R.string.error_please_login_first, LENGTH_LONG);
                     return false;
                 }
                 EditTextDialogBuilder builder = new EditTextDialogBuilder(context, "", getString(R.string.action_add_tag_tip));
@@ -1314,12 +1316,12 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                 return;
             }
             if (mGalleryDetail.apiUid < 0) {
-                showTip(R.string.sign_in_first, LENGTH_LONG);
+                showTip(R.string.error_please_login_first, LENGTH_LONG);
                 return;
             }
             ArchiveListDialogHelper helper = new ArchiveListDialogHelper();
             Dialog dialog = new AlertDialog.Builder(context)
-                    .setTitle(R.string.dialog_archive_title)
+                    .setTitle(R.string.settings_download)
                     .setView(R.layout.dialog_archive_list)
                     .setOnDismissListener(helper)
                     .show();
@@ -1329,7 +1331,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                 return;
             }
             if (mGalleryDetail.apiUid < 0) {
-                showTip(R.string.sign_in_first, LENGTH_LONG);
+                showTip(R.string.error_please_login_first, LENGTH_LONG);
                 return;
             }
             RateDialogHelper helper = new RateDialogHelper();
@@ -1360,8 +1362,18 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                     .setRequestCode(this, REQUEST_CODE_COMMENT_GALLERY));
         } else if (mPreviews == v) {
             if (null != mGalleryDetail) {
+                int scrollTo = 0;
+                if (mGalleryDetail.previewSet != null) {
+                    int previewNum = Settings.getPreviewNum();
+                    if (previewNum < mGalleryDetail.previewSet.size()) {
+                        scrollTo = previewNum;
+                    } else if (mGalleryDetail.previewPages > 1) {
+                        scrollTo = -1;
+                    }
+                }
                 Bundle args = new Bundle();
                 args.putParcelable(GalleryPreviewsScene.KEY_GALLERY_INFO, mGalleryDetail);
+                args.putInt(GalleryPreviewsScene.KEY_SCROLL_TO, scrollTo);
                 startScene(new Announcer(GalleryPreviewsScene.class).setArgs(args));
             }
         } else {
@@ -1448,7 +1460,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
 
         menu.add(resources.getString(android.R.string.copy));
         menuId.add(R.id.copy);
-        if (!tag.equals(tv.getText().toString())) {
+        if (!tag2.equals(tv.getText().toString())) {
             menu.add(resources.getString(R.string.copy_trans));
             menuId.add(R.id.copy_trans);
         }
@@ -1523,15 +1535,21 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             return true;
         } else if (mHeartGroup == v) {
             if (mGalleryDetail != null && !mModifyingFavorites) {
-                boolean remove = false;
-                if (EhDB.containLocalFavorites(mGalleryDetail.gid) || mGalleryDetail.isFavorited) {
+                boolean removeOrEdit = false;
+                if (EhDB.containLocalFavorites(mGalleryDetail.gid)) {
                     mModifyingFavorites = true;
                     CommonOperations.removeFromFavorites(activity, mGalleryDetail,
                             new ModifyFavoritesListener(activity,
                                     activity.getStageId(), getTag(), true));
-                    remove = true;
+                    removeOrEdit = true;
+                } else if (mGalleryDetail.isFavorited) {
+                    mModifyingFavorites = true;
+                    CommonOperations.doAddToFavorites(activity, mGalleryDetail, mGalleryDetail.favoriteSlot,
+                            new ModifyFavoritesListener(activity,
+                                    activity.getStageId(), getTag(), false), true);
+                    removeOrEdit = true;
                 }
-                if (!remove) {
+                if (!removeOrEdit) {
                     mModifyingFavorites = true;
                     CommonOperations.addToFavorites(activity, mGalleryDetail,
                             new ModifyFavoritesListener(activity,
@@ -1905,14 +1923,34 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         }
     }
 
-    private static class DownloadArchiveListener extends EhCallback<GalleryDetailScene, Void> {
+    private static class DownloadArchiveListener extends EhCallback<GalleryDetailScene, String> {
 
-        public DownloadArchiveListener(Context context, int stageId, String sceneTag) {
+        private final GalleryInfo mGalleryInfo;
+
+        public DownloadArchiveListener(Context context, int stageId, String sceneTag, GalleryInfo galleryInfo) {
             super(context, stageId, sceneTag);
+            mGalleryInfo = galleryInfo;
         }
 
         @Override
-        public void onSuccess(Void result) {
+        public void onSuccess(String result) {
+            if (result != null) {
+                // TODO: Don't use buggy system download service
+                DownloadManager.Request r = new DownloadManager.Request(Uri.parse(result));
+                var name = mGalleryInfo.gid + "-" + EhUtils.getSuitableTitle(mGalleryInfo) + ".zip";
+                r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
+                        FileUtils.sanitizeFilename(name));
+                r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                DownloadManager dm = (DownloadManager) getApplication().getSystemService(Context.DOWNLOAD_SERVICE);
+                if (dm != null) {
+                    try {
+                        dm.enqueue(r);
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                        ExceptionUtils.throwIfFatal(e);
+                    }
+                }
+            }
             showTip(R.string.download_archive_started, LENGTH_SHORT);
         }
 
@@ -1936,7 +1974,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
     }
 
     private class ArchiveListDialogHelper implements AdapterView.OnItemClickListener,
-            DialogInterface.OnDismissListener, EhClient.Callback<Pair<String, Pair<String, String>[]>> {
+            DialogInterface.OnDismissListener, EhClient.Callback<ArchiveParser.Result> {
 
         @Nullable
         private CircularProgressIndicator mProgressView;
@@ -1971,21 +2009,18 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             }
         }
 
-        private void bind(Pair<String, String>[] data) {
+        private void bind(List<ArchiveParser.Archive> data) {
             if (null == mDialog || null == mProgressView || null == mErrorText || null == mListView) {
                 return;
             }
 
-            if (0 == data.length) {
+            if (null == data || 0 == data.size()) {
                 mProgressView.setVisibility(View.GONE);
                 mErrorText.setVisibility(View.VISIBLE);
                 mListView.setVisibility(View.GONE);
                 mErrorText.setText(R.string.no_archives);
             } else {
-                String[] nameArray = new String[data.length];
-                for (int i = 0, n = data.length; i < n; i++) {
-                    nameArray[i] = data[i].second;
-                }
+                var nameArray = data.stream().map(archive -> archive.format(getResources()::getString)).toArray(String[]::new);
                 mProgressView.setVisibility(View.GONE);
                 mErrorText.setVisibility(View.GONE);
                 mListView.setVisibility(View.VISIBLE);
@@ -1997,12 +2032,13 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Context context = getContext();
             MainActivity activity = getMainActivity();
-            if (null != context && null != activity && null != mArchiveList && position < mArchiveList.length) {
-                String res = mArchiveList[position].first;
+            if (null != context && null != activity && null != mArchiveList && position < mArchiveList.size()) {
+                String res = mArchiveList.get(position).res();
+                boolean isHAtH = mArchiveList.get(position).isHAtH();
                 EhRequest request = new EhRequest();
                 request.setMethod(EhClient.METHOD_DOWNLOAD_ARCHIVE);
-                request.setArgs(mGalleryDetail.gid, mGalleryDetail.token, mArchiveFormParamOr, res);
-                request.setCallback(new DownloadArchiveListener(context, activity.getStageId(), getTag()));
+                request.setArgs(mGalleryDetail.gid, mGalleryDetail.token, mArchiveFormParamOr, res, isHAtH);
+                request.setCallback(new DownloadArchiveListener(context, activity.getStageId(), getTag(), mGalleryDetail));
                 EhApplication.getEhClient(context).execute(request);
             }
 
@@ -2025,12 +2061,12 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         }
 
         @Override
-        public void onSuccess(Pair<String, Pair<String, String>[]> result) {
+        public void onSuccess(ArchiveParser.Result result) {
             if (mRequest != null) {
                 mRequest = null;
-                mArchiveFormParamOr = result.first;
-                mArchiveList = result.second;
-                bind(result.second);
+                mArchiveFormParamOr = result.paramOr();
+                mArchiveList = result.archiveList();
+                bind(result.archiveList());
             }
         }
 
@@ -2053,7 +2089,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
     }
 
     private class TorrentListDialogHelper implements AdapterView.OnItemClickListener,
-            DialogInterface.OnDismissListener, EhClient.Callback<Pair<String, String>[]> {
+            DialogInterface.OnDismissListener, EhClient.Callback<List<TorrentParser.Result>> {
 
         @Nullable
         private CircularProgressIndicator mProgressView;
@@ -2088,21 +2124,18 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             }
         }
 
-        private void bind(Pair<String, String>[] data) {
+        private void bind(List<TorrentParser.Result> data) {
             if (null == mDialog || null == mProgressView || null == mErrorText || null == mListView) {
                 return;
             }
 
-            if (0 == data.length) {
+            if (null == data || 0 == data.size()) {
                 mProgressView.setVisibility(View.GONE);
                 mErrorText.setVisibility(View.VISIBLE);
                 mListView.setVisibility(View.GONE);
                 mErrorText.setText(R.string.no_torrents);
             } else {
-                String[] nameArray = new String[data.length];
-                for (int i = 0, n = data.length; i < n; i++) {
-                    nameArray[i] = data[i].second;
-                }
+                var nameArray = data.stream().map(torrent -> torrent.format(getResources()::getString)).toArray(String[]::new);
                 mProgressView.setVisibility(View.GONE);
                 mErrorText.setVisibility(View.GONE);
                 mListView.setVisibility(View.VISIBLE);
@@ -2113,9 +2146,9 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Context context = getContext();
-            if (null != context && null != mTorrentList && position < mTorrentList.length) {
-                String url = mTorrentList[position].first;
-                String name = mTorrentList[position].second;
+            if (null != context && null != mTorrentList && position < mTorrentList.size()) {
+                String url = mTorrentList.get(position).url();
+                String name = mTorrentList.get(position).name();
                 // TODO: Don't use buggy system download service
                 DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url.replace("exhentai.org", "ehtracker.org")));
                 r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS,
@@ -2127,9 +2160,11 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                 if (dm != null) {
                     try {
                         dm.enqueue(r);
+                        showTip(R.string.download_torrent_started, LENGTH_SHORT);
                     } catch (Throwable e) {
                         e.printStackTrace();
                         ExceptionUtils.throwIfFatal(e);
+                        showTip(R.string.download_torrent_failure, LENGTH_SHORT);
                     }
                 }
             }
@@ -2153,7 +2188,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         }
 
         @Override
-        public void onSuccess(Pair<String, String>[] result) {
+        public void onSuccess(List<TorrentParser.Result> result) {
             if (mRequest != null) {
                 mRequest = null;
                 mTorrentList = result;
@@ -2248,8 +2283,8 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             boolean checked = mBuilder.isChecked();
             Settings.putRemoveImageFiles(checked);
             if (checked) {
+                UniFile file = SpiderDen.getGalleryDownloadDir(mGalleryInfo.gid);
                 EhDB.removeDownloadDirname(mGalleryInfo.gid);
-                UniFile file = SpiderDen.getGalleryDownloadDir(mGalleryInfo);
                 deleteFileAsync(file);
             }
         }

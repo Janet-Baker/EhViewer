@@ -20,6 +20,7 @@ import android.annotation.SuppressLint;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -106,9 +107,8 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
 
         RecyclerView recyclerView = mRecyclerView;
         switch (type) {
-            default:
-            case GalleryAdapter.TYPE_LIST: {
-                int columnWidth = mResources.getDimensionPixelOffset(Settings.getDetailSizeResId());
+            case GalleryAdapter.TYPE_LIST -> {
+                int columnWidth = Settings.getDetailSize();
                 mLayoutManager.setColumnSize(columnWidth);
                 mLayoutManager.setStrategy(AutoStaggeredGridLayoutManager.STRATEGY_MIN_SIZE);
                 if (null != mGirdDecoration) {
@@ -123,9 +123,8 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
                 recyclerView.addItemDecoration(mListDecoration);
                 adjustPaddings();
                 notifyDataSetChanged();
-                break;
             }
-            case GalleryAdapter.TYPE_GRID: {
+            case GalleryAdapter.TYPE_GRID -> {
                 int columnWidth = Settings.getThumbSize();
                 mLayoutManager.setColumnSize(columnWidth);
                 mLayoutManager.setStrategy(AutoStaggeredGridLayoutManager.STRATEGY_SUITABLE_SIZE);
@@ -141,7 +140,6 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
                 recyclerView.addItemDecoration(mGirdDecoration);
                 adjustPaddings();
                 notifyDataSetChanged();
-                break;
             }
         }
     }
@@ -149,25 +147,37 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
     @NonNull
     @Override
     public GalleryHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        int layoutId;
-        switch (viewType) {
-            default:
-            case TYPE_LIST:
-                layoutId = R.layout.item_gallery_list;
-                break;
-            case TYPE_GRID:
-                layoutId = R.layout.item_gallery_grid;
-                break;
-        }
+        int layoutId = switch (viewType) {
+            case TYPE_LIST -> R.layout.item_gallery_list;
+            case TYPE_GRID -> R.layout.item_gallery_grid;
+            default -> throw new IllegalStateException("Unexpected value: " + viewType);
+        };
 
         GalleryHolder holder = new GalleryHolder(mInflater.inflate(layoutId, parent, false));
 
-        if (viewType == TYPE_LIST) {
-            ViewGroup.LayoutParams lp = holder.thumb.getLayoutParams();
-            lp.width = mListThumbWidth;
-            lp.height = mListThumbHeight;
-            holder.thumb.setLayoutParams(lp);
+        switch (viewType) {
+            case TYPE_LIST -> {
+                ViewGroup.LayoutParams lp = holder.thumb.getLayoutParams();
+                lp.width = mListThumbWidth;
+                lp.height = mListThumbHeight;
+                holder.thumb.setLayoutParams(lp);
+            }
+            case TYPE_GRID -> {
+                int columnWidth = Settings.getThumbSize();
+                int textSize = columnWidth / 15;
+                ViewGroup.LayoutParams lp = holder.category.getLayoutParams();
+                lp.width = columnWidth / 5;
+                lp.height = (int) (lp.width * 0.75);
+                holder.category.setLayoutParams(lp);
+                holder.simpleLanguage.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                holder.pages.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                holder.title.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
+                holder.title.setMaxLines(2);
+            }
         }
+
+        holder.card.setOnClickListener(v -> onItemClick(holder.itemView, holder.getBindingAdapterPosition()));
+        holder.card.setOnLongClickListener(v -> onItemLongClick(holder.itemView, holder.getBindingAdapterPosition()));
 
         return holder;
     }
@@ -193,12 +203,18 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
         }
 
         switch (mType) {
-            default:
-            case TYPE_LIST: {
+            case TYPE_LIST -> {
                 holder.thumb.load(EhCacheKeyFactory.getThumbKey(gi.gid), gi.thumb);
                 holder.title.setText(EhUtils.getSuitableTitle(gi));
-                holder.uploader.setText(gi.uploader);
                 holder.uploader.setAlpha(gi.disowned ? .5f : 1f);
+                if (TextUtils.isEmpty(gi.uploader)) {
+                    holder.uploader.setText(null);
+                    holder.uploader.setVisibility(View.GONE);
+                } else {
+                    holder.uploader.setText(gi.uploader);
+                    holder.uploader.setVisibility(View.VISIBLE);
+                }
+                holder.note.setText(gi.favoriteNote);
                 holder.rating.setRating(gi.rating);
                 TextView category = holder.category;
                 String newCategoryText = EhUtils.getCategory(gi.category);
@@ -223,11 +239,29 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
                 }
                 holder.favourited.setVisibility((mShowFavourited && gi.favoriteSlot >= -1 && gi.favoriteSlot <= 10) ? View.VISIBLE : View.GONE);
                 holder.downloaded.setVisibility(mDownloadManager.containDownloadInfo(gi.gid) ? View.VISIBLE : View.GONE);
-                break;
             }
-            case TYPE_GRID: {
+            case TYPE_GRID -> {
                 ((TileThumb) holder.thumb).setThumbSize(gi.thumbWidth, gi.thumbHeight);
                 holder.thumb.load(EhCacheKeyFactory.getThumbKey(gi.gid), gi.thumb);
+                if (Settings.getThumbShowTitle()) {
+                    holder.title.setText(EhUtils.getSuitableTitle(gi));
+                    holder.title.setVisibility(View.VISIBLE);
+                    holder.rating.setRating(gi.rating);
+                    holder.rating.setVisibility(View.VISIBLE);
+                    if (gi.pages == 0 || !Settings.getShowGalleryPages()) {
+                        holder.pages.setText(null);
+                        holder.pages.setVisibility(View.GONE);
+                    } else {
+                        holder.pages.setText(gi.pages + "P");
+                        holder.pages.setVisibility(View.VISIBLE);
+                    }
+                } else {
+                    holder.title.setText(null);
+                    holder.title.setVisibility(View.GONE);
+                    holder.rating.setVisibility(View.GONE);
+                    holder.pages.setText(null);
+                    holder.pages.setVisibility(View.GONE);
+                }
                 View category = holder.category;
                 Drawable drawable = category.getBackground();
                 int color = EhUtils.getCategoryColor(gi.category);
@@ -238,15 +272,11 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
                     ((TriangleDrawable) drawable).setColor(color);
                 }
                 holder.simpleLanguage.setText(gi.simpleLanguage);
-                break;
             }
         }
 
         // Update transition name
         ViewCompat.setTransitionName(holder.thumb, TransitionNameFactory.getThumbTransitionName(gi.gid));
-
-        holder.card.setOnClickListener(v -> onItemClick(holder.itemView, position));
-        holder.card.setOnLongClickListener(v -> onItemLongClick(holder.itemView, position));
     }
 
     @IntDef({TYPE_LIST, TYPE_GRID})

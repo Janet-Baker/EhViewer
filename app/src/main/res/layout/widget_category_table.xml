@@ -5,9 +5,10 @@
   ~ you may not use this file except in compliance with the License.
   ~ You may obtain a copy of the License at
   ~
-  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~     http://www.apache.org/licenses/LICENSE-2.0
   ~
   ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
@@ -46,9 +47,8 @@
             style="@style/CategoryText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/category_table_item_margin"
             android:layout_marginRight="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/artist_cg"
             android:text="@string/artist_cg"
@@ -59,8 +59,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/category_table_item_margin"
-            android:layout_marginTop="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/game_cg"
             android:text="@string/game_cg"
@@ -73,9 +72,8 @@
             style="@style/CategoryText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/category_table_item_margin"
             android:layout_marginRight="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/western"
             android:text="@string/western"
@@ -86,8 +84,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/category_table_item_margin"
-            android:layout_marginTop="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/non_h"
             android:text="@string/non_h"
@@ -100,9 +97,8 @@
             style="@style/CategoryText"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/category_table_item_margin"
             android:layout_marginRight="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/image_set"
             android:text="@string/image_set"
@@ -113,8 +109,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/category_table_item_margin"
-            android:layout_marginTop="@dimen/category_table_item_margin"
-            android:layout_marginBottom="@dimen/category_table_item_margin"
+            android:layout_marginVertical="@dimen/category_table_item_margin"
             android:layout_weight="1"
             android:background="@color/cosplay"
             android:text="@string/cosplay"

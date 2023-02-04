@@ -41,7 +41,7 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
     private static final float RESERVATION = 1f;
 
     private static final float MAX_SCALE = 2.0f;
-    private static final float MIN_SCALE = 1.0f;
+    private static final float MIN_SCALE = 0.5f;
     private static final float SCALE_ERROR = 0.01f;
 
     private static final int INVALID_TOP = Integer.MAX_VALUE;
@@ -196,12 +196,13 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
         return null;
     }
 
-    private boolean isInScreen(GalleryPageView page) {
+    private boolean isInScreen(GalleryPageView page, boolean includeFirst) {
         int height = mGalleryView.getHeight();
         Rect bound = page.bounds();
         int pageTop = bound.top;
         int pageBottom = bound.bottom;
-        return (pageTop >= 0 && pageTop < height) || (pageBottom > 0 && pageBottom <= height) ||
+        return (includeFirst && pageTop >= 0 && pageTop < height) ||
+                (pageBottom > 0 && pageBottom <= height) ||
                 (pageTop < 0 && pageBottom > height);
     }
 
@@ -511,7 +512,7 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
                     continue;
                 }
 
-                if (isInScreen(page)) {
+                if (isInScreen(page, true)) {
                     mFirstShownPageIndex = page.getIndex();
                     break;
                 }
@@ -540,10 +541,12 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
 
         float startScale = mScale;
         float endScale;
-        if (startScale < MAX_SCALE - SCALE_ERROR) {
+        if (startScale < RESERVATION - SCALE_ERROR) {
+            endScale = RESERVATION;
+        } else if (startScale < MAX_SCALE - SCALE_ERROR) {
             endScale = MAX_SCALE;
         } else {
-            endScale = MIN_SCALE;
+            endScale = RESERVATION;
         }
 
         mSmoothScaler.startSmoothScaler(x, y, startScale, endScale, 300);
@@ -835,7 +838,7 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
             GalleryPageView previousPage = null;
             GalleryPageView firstShownPage = null;
             for (GalleryPageView p : mPages) {
-                if (isInScreen(p)) {
+                if (isInScreen(p, true)) {
                     firstShownPage = p;
                     break;
                 }
@@ -888,7 +891,7 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
             GalleryPageView lastShownPage = null;
             GalleryPageView nextPage = null;
             for (GalleryPageView p : mPages) {
-                if (isInScreen(p)) {
+                if (isInScreen(p, true)) {
                     lastShownPage = p;
                 } else if (null != lastShownPage) {
                     nextPage = p;
@@ -937,12 +940,13 @@ class ScrollLayoutManager extends GalleryView.LayoutManager {
 
     @Override
     public int getCurrentIndex() {
+        int index = GalleryPageView.INVALID_INDEX;
         for (GalleryPageView page : mPages) {
-            if (isInScreen(page)) {
-                return page.getIndex();
+            if (isInScreen(page, false)) {
+                index = page.getIndex();
             }
         }
-        return GalleryPageView.INVALID_INDEX;
+        return index;
     }
 
     @Override

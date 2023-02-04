@@ -25,6 +25,7 @@ import androidx.core.util.Pair;
 import com.hippo.ehviewer.AppConfig;
 import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
+import com.hippo.ehviewer.Settings;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.IoThreadPoolExecutor;
 import com.hippo.yorozuya.FileUtils;
@@ -59,6 +60,7 @@ public class EhTagDatabase {
     // TODO more lock for different language
     private static final Lock lock = new ReentrantLock();
     private static volatile EhTagDatabase instance;
+    private static boolean translate;
 
     static {
         NAMESPACE_TO_PREFIX.put("artist", "a:");
@@ -101,12 +103,8 @@ public class EhTagDatabase {
 
     @Nullable
     public static EhTagDatabase getInstance(Context context) {
-        if (isPossible(context)) {
-            return instance;
-        } else {
-            instance = null;
-            return null;
-        }
+        translate = Settings.getShowTagTranslations() && isTranslatable(context);
+        return instance;
     }
 
     @Nullable
@@ -123,8 +121,8 @@ public class EhTagDatabase {
         }
     }
 
-    public static boolean isPossible(Context context) {
-        return getMetadata(context) != null;
+    public static boolean isTranslatable(Context context) {
+        return context.getResources().getBoolean(R.bool.tag_translatable);
     }
 
     @Nullable
@@ -196,9 +194,6 @@ public class EhTagDatabase {
                 return false;
             }
             ResponseBody body = response.body();
-            if (body == null) {
-                return false;
-            }
 
             try (InputStream is = body.byteStream(); OutputStream os = new FileOutputStream(file)) {
                 IOUtils.copy(is, os);
@@ -402,9 +397,12 @@ public class EhTagDatabase {
 
             begin = start + end;
 
-            byte[] hintBytes = new byte[end - middle - 1];
-            System.arraycopy(tags, start + middle + 1, hintBytes, 0, end - middle - 1);
-            String hint = new String(hintBytes, StandardCharsets.UTF_8);
+            String hint = null;
+            if (translate) {
+                byte[] hintBytes = new byte[end - middle - 1];
+                System.arraycopy(tags, start + middle + 1, hintBytes, 0, end - middle - 1);
+                hint = new String(hintBytes, StandardCharsets.UTF_8);
+            }
             byte[] tagBytes = new byte[middle];
             System.arraycopy(tags, start + 1, tagBytes, 0, middle);
             String tag = new String(tagBytes, StandardCharsets.UTF_8);
@@ -422,15 +420,32 @@ public class EhTagDatabase {
                     searchHints.add(pair);
                 }
             }
-            if (searchHints.size() > 20) {
+
+            if (searchHints.size() >= 50) {
                 break;
             }
-
         }
+
+        for (Pair<String, String> searchHint : (ArrayList<Pair<String, String>>) searchHints.clone()) {
+            String tag = searchHint.second, hint = searchHint.first, tagN = null;
+            int index = tag.indexOf(':');
+            if (index > 0 && index < tag.length() - 1)
+                tagN = tag.substring(index + 1);
+
+            if (equalsIgnoreSpace(keyword, hint) || equalsIgnoreSpace(keyword, tag) || equalsIgnoreSpace(keyword, tagN)) {
+                searchHints.remove(searchHint);
+                searchHints.add(0, searchHint);
+            }
+        }
+
         return searchHints;
     }
 
     private boolean containsIgnoreSpace(String text, String key) {
-        return text.replace(" ", "").contains(key.replace(" ", ""));
+        return text != null && text.replace(" ", "").contains(key.replace(" ", ""));
+    }
+
+    private boolean equalsIgnoreSpace(String keyword, String text) {
+        return keyword != null && text != null && keyword.replaceAll("\\s*", "").equals(text.replaceAll("\\s*", ""));
     }
 }

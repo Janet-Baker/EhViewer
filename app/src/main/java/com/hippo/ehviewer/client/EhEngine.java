@@ -33,7 +33,6 @@ import com.hippo.ehviewer.client.data.GalleryInfo;
 import com.hippo.ehviewer.client.data.PreviewSet;
 import com.hippo.ehviewer.client.exception.CancelledException;
 import com.hippo.ehviewer.client.exception.EhException;
-import com.hippo.ehviewer.client.exception.NoHAtHClientException;
 import com.hippo.ehviewer.client.exception.ParseException;
 import com.hippo.ehviewer.client.parser.ArchiveParser;
 import com.hippo.ehviewer.client.parser.EventPaneParser;
@@ -65,8 +64,6 @@ import org.jsoup.select.Elements;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -88,8 +85,6 @@ public class EhEngine {
     private static final String KOKOMADE_URL = "https://exhentai.org/img/kokomade.jpg";
     private static final MediaType MEDIA_TYPE_JPEG = MediaType.parse("image/jpeg");
 
-    private static final Pattern PATTERN_NEED_HATH_CLIENT = Pattern.compile("(You must have a H@H client assigned to your account to use this feature\\.)");
-
     public static EhFilter sEhFilter;
 
     public static void initialize() {
@@ -109,7 +104,7 @@ public class EhEngine {
             throw new EhException("Sad Panda");
         }
 
-        // Check sad panda(without panda)
+        // Check sad panda (without panda)
         if (headers != null && "text/html; charset=UTF-8".equals(headers.get("Content-Type")) &&
                 "0".equals(headers.get("Content-Length"))) {
             throw new EhException("Sad Panda\n(without panda)");
@@ -120,6 +115,12 @@ public class EhEngine {
             throw new EhException("今回はここまで\n\n" + GetText.getString(R.string.kokomade_tip));
         }
 
+        // Check 503
+        if (body != null && body.contains("Backend fetch failed")) {
+            throw new EhException("Error 503\nBackend fetch failed");
+        }
+
+        // Check gallery not available
         if (body != null && body.contains("Gallery Not Available - ")) {
             String error = GalleryNotAvailableParser.parse(body);
             if (!TextUtils.isEmpty(error)) {
@@ -185,8 +186,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -263,8 +263,7 @@ public class EhEngine {
         Headers headers = null;
         GalleryListParser.Result result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -326,8 +325,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -354,8 +352,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -387,8 +384,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -429,8 +425,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -466,8 +461,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -510,8 +504,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -524,7 +517,7 @@ public class EhEngine {
     }
 
     public static FavoritesParser.Result getFavorites(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
-                                                      String url, boolean callApi) throws Throwable {
+                                                      String url) throws Throwable {
         String referer = EhUrl.getReferer();
         Log.d(TAG, url);
         Request request = new EhRequestBuilder(url, referer).build();
@@ -539,8 +532,7 @@ public class EhEngine {
         Headers headers = null;
         FavoritesParser.Result result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -574,7 +566,7 @@ public class EhEngine {
         builder.add("favcat", catStr);
         builder.add("favnote", note != null ? note : "");
         // submit=Add+to+Favorites is not necessary, just use submit=Apply+Changes all the time
-        builder.add("submit", "Apply Changes");
+        builder.add("apply", "Apply Changes");
         builder.add("update", "1");
         String url = EhUrl.getAddFavorites(gid, token);
         String origin = EhUrl.getOrigin();
@@ -592,8 +584,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -617,7 +608,7 @@ public class EhEngine {
     }
 
     public static FavoritesParser.Result modifyFavorites(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
-                                                         String url, long[] gidArray, int dstCat, boolean callApi) throws Throwable {
+                                                         String url, long[] gidArray, int dstCat) throws Throwable {
         String catStr;
         if (dstCat == -1) {
             catStr = "delete";
@@ -648,8 +639,7 @@ public class EhEngine {
         Headers headers = null;
         FavoritesParser.Result result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -665,8 +655,8 @@ public class EhEngine {
         return result;
     }
 
-    public static Pair<String, String>[] getTorrentList(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
-                                                        String url, long gid, String token) throws Throwable {
+    public static List<TorrentParser.Result> getTorrentList(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
+                                                            String url, long gid, String token) throws Throwable {
         String referer = EhUrl.getGalleryDetailUrl(gid, token);
         Log.d(TAG, url);
         Request request = new EhRequestBuilder(url, referer).build();
@@ -679,10 +669,9 @@ public class EhEngine {
 
         String body = null;
         Headers headers = null;
-        Pair<String, String>[] result;
+        List<TorrentParser.Result> result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -696,8 +685,8 @@ public class EhEngine {
         return result;
     }
 
-    public static Pair<String, Pair<String, String>[]> getArchiveList(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
-                                                                      String url, long gid, String token) throws Throwable {
+    public static ArchiveParser.Result getArchiveList(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
+                                                      String url, long gid, String token) throws Throwable {
         String referer = EhUrl.getGalleryDetailUrl(gid, token);
         Log.d(TAG, url);
         Request request = new EhRequestBuilder(url, referer).build();
@@ -710,10 +699,9 @@ public class EhEngine {
 
         String body = null;
         Headers headers = null;
-        Pair<String, Pair<String, String>[]> result;
+        ArchiveParser.Result result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -727,8 +715,8 @@ public class EhEngine {
         return result;
     }
 
-    public static Void downloadArchive(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
-                                       long gid, String token, String or, String res) throws Throwable {
+    public static String downloadArchive(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
+                                         long gid, String token, String or, String res, boolean isHAtH) throws Throwable {
         if (or == null || or.length() == 0) {
             throw new EhException("Invalid form param or: " + or);
         }
@@ -736,7 +724,16 @@ public class EhEngine {
             throw new EhException("Invalid res: " + res);
         }
         FormBody.Builder builder = new FormBody.Builder();
-        builder.add("hathdl_xres", res);
+        if (isHAtH) {
+            builder.add("hathdl_xres", res);
+        } else {
+            builder.add("dltype", res);
+            if (res.equals("org")) {
+                builder.add("dlcheck", "Download Original Archive");
+            } else {
+                builder.add("dlcheck", "Download Resample Archive");
+            }
+        }
         String url = EhUrl.getDownloadArchive(gid, token, or);
         String referer = EhUrl.getGalleryDetailUrl(gid, token);
         String origin = EhUrl.getOrigin();
@@ -754,8 +751,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -766,9 +762,26 @@ public class EhEngine {
             throw e;
         }
 
-        Matcher m = PATTERN_NEED_HATH_CLIENT.matcher(body);
-        if (m.find()) {
-            throw new NoHAtHClientException("No H@H client");
+        var result = ArchiveParser.parseArchiveUrl(body);
+        if (!isHAtH) {
+            if (result == null) {
+                Thread.sleep(1000);
+                try (var response = call.clone().execute()) {
+                    code = response.code();
+                    headers = response.headers();
+                    body = response.body().string();
+                    throwException(call, code, headers, body, null);
+                } catch (Throwable e) {
+                    ExceptionUtils.throwIfFatal(e);
+                    throwException(call, code, headers, body, e);
+                    throw e;
+                }
+                result = ArchiveParser.parseArchiveUrl(body);
+                if (result == null) {
+                    throw new EhException("Archive unavailable");
+                }
+            }
+            return result;
         }
 
         return null;
@@ -788,8 +801,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -816,8 +828,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -827,6 +838,55 @@ public class EhEngine {
             throwException(call, code, headers, body, e);
             throw e;
         }
+    }
+
+    public static Void getUConfig(@Nullable EhClient.Task task,
+                                                  OkHttpClient okHttpClient) throws Throwable {
+        String url = EhUrl.getUConfigUrl();
+        Log.d(TAG, url);
+        Request request = new EhRequestBuilder(url, null).build();
+        Call call = okHttpClient.newCall(request);
+
+        // Put call
+        if (null != task) {
+            task.setCall(call);
+        }
+
+        String body = null;
+        Headers headers = null;
+        int code = -1;
+        try (Response response = call.execute()) {
+            code = response.code();
+            headers = response.headers();
+            body = response.body().string();
+            request = response.request();
+            throwException(call, code, headers, body, null);
+        } catch (Throwable e) {
+            ExceptionUtils.throwIfFatal(e);
+            throwException(call, code, headers, body, e);
+            throw e;
+        }
+
+        // TODO Use a better way to handle 302
+        if (!request.url().toString().equals(url)) {
+            Log.d(TAG, "Redirected! Retry " + url);
+            request = new EhRequestBuilder(url, null).build();
+            call = okHttpClient.newCall(request);
+            if (null != task) task.setCall(call);
+
+            try (Response response = call.execute()) {
+                code = response.code();
+                headers = response.headers();
+                body = response.body().string();
+                throwException(call, code, headers, body, null);
+            } catch (Throwable e) {
+                ExceptionUtils.throwIfFatal(e);
+                throwException(call, code, headers, body, e);
+                throw e;
+            }
+        }
+
+        return null;
     }
 
     public static VoteCommentParser.Result voteComment(@Nullable EhClient.Task task, OkHttpClient okHttpClient,
@@ -857,8 +917,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -898,8 +957,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -962,8 +1020,7 @@ public class EhEngine {
         Headers headers = null;
         GalleryListParser.Result result;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
 
             Log.d(TAG, "" + response.request().url());
 
@@ -997,8 +1054,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();
@@ -1039,8 +1095,7 @@ public class EhEngine {
         String body = null;
         Headers headers = null;
         int code = -1;
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             code = response.code();
             headers = response.headers();
             body = response.body().string();

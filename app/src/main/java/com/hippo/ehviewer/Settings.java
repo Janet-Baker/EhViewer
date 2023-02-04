@@ -57,14 +57,16 @@ public class Settings {
     private static final int DEFAULT_LAUNCH_PAGE = 0;
     public static final String KEY_LIST_MODE = "list_mode";
     private static final int DEFAULT_LIST_MODE = 0;
-    public static final String KEY_DETAIL_SIZE = "detail_size";
-    private static final int DEFAULT_DETAIL_SIZE = 0;
+    public static final String KEY_DETAIL_SIZE = "detail_size_";
+    private static final int DEFAULT_DETAIL_SIZE = 8;
     public static final String KEY_LIST_THUMB_SIZE = "list_tile_size";
     private static final int DEFAULT_LIST_THUMB_SIZE = 40;
     public static boolean LIST_THUMB_SIZE_INITED = false;
     private static int LIST_THUMB_SIZE = 40;
     public static final String KEY_THUMB_SIZE = "thumb_size_";
-    private static final int DEFAULT_THUMB_SIZE = 3;
+    private static final int DEFAULT_THUMB_SIZE = 4;
+    public static final String KEY_THUMB_SHOW_TITLE = "thumb_show_title";
+    private static final boolean DEFAULT_THUMB_SHOW_TITLE = false;
     private static final String KEY_THUMB_RESOLUTION = "thumb_resolution";
     private static final int DEFAULT_THUMB_RESOLUTION = 0;
     private static final String KEY_SHOW_JPN_TITLE = "show_jpn_title";
@@ -73,10 +75,12 @@ public class Settings {
     private static final boolean DEFAULT_SHOW_GALLERY_PAGES = false;
     private static final String KEY_SHOW_COMMENTS = "show_gallery_comments";
     private static final boolean DEFAULT_SHOW_COMMENTS = true;
-    public static final String KEY_SHOW_TAG_TRANSLATIONS = "show_tag_translations";
-    private static final boolean DEFAULT_SHOW_TAG_TRANSLATIONS = false;
     private static final String KEY_PREVIEW_NUM = "preview_num";
     private static final int DEFAULT_PREVIEW_NUM = 60;
+    private static final String KEY_PREVIEW_SIZE = "preview_size";
+    private static final int DEFAULT_PREVIEW_SIZE = 3;
+    public static final String KEY_SHOW_TAG_TRANSLATIONS = "show_tag_translations";
+    private static final boolean DEFAULT_SHOW_TAG_TRANSLATIONS = false;
     private static final String KEY_METERED_NETWORK_WARNING = "cellular_network_warning";
     private static final boolean DEFAULT_METERED_NETWORK_WARNING = false;
     private static final String KEY_REQUEST_NEWS = "request_news";
@@ -132,8 +136,8 @@ public class Settings {
     private static final int DEFAULT_DOWNLOAD_DELAY = 0;
     private static final String KEY_PRELOAD_IMAGE = "preload_image";
     private static final int DEFAULT_PRELOAD_IMAGE = 5;
-    private static final String KEY_DOWNLOAD_ORIGIN_IMAGE = "download_origin_image";
-    private static final boolean DEFAULT_DOWNLOAD_ORIGIN_IMAGE = false;
+    private static final String KEY_DOWNLOAD_ORIGIN_IMAGE = "download_origin_image_";
+    private static final int DEFAULT_DOWNLOAD_ORIGIN_IMAGE = 0;
     /********************
      ****** Privacy and Security
      ********************/
@@ -208,6 +212,8 @@ public class Settings {
     public static final int INVALID_DEFAULT_FAV_SLOT = 0;
     private static final String KEY_DEFAULT_FAV_SLOT = "default_favorite_2";
     private static final int DEFAULT_DEFAULT_FAV_SLOT = INVALID_DEFAULT_FAV_SLOT;
+    private static final String KEY_NEVER_ADD_FAV_NOTES = "never_add_favorite_notes";
+    private static final boolean DEFAULT_NEVER_ADD_FAV_NOTES = false;
     /********************
      ****** Guide
      ********************/
@@ -239,6 +245,8 @@ public class Settings {
     private static final String DEFAULT_AVATAR = null;
     private static final String KEY_QUICK_SEARCH_TIP = "quick_search_tip";
     private static final boolean DEFAULT_QUICK_SEARCH_TIP = false;
+    private static final String KEY_QS_SAVE_PROGRESS = "qs_save_progress";
+    private static final boolean DEFAULT_QS_SAVE_PROGRESS = false;
     private static final String KEY_HAS_DEFAULT_DOWNLOAD_LABEL = "has_default_download_label";
     private static final boolean DEFAULT_HAS_DOWNLOAD_LABEL = false;
     private static final String KEY_DEFAULT_DOWNLOAD_LABEL = "default_download_label";
@@ -262,12 +270,8 @@ public class Settings {
     }
 
     private static void fixDefaultValue(Context context) {
-        if ("CN".equals(Locale.getDefault().getCountry())) {
-            // Enable built in hosts if the country is CN
-            if (!sSettingsPre.contains(KEY_BUILT_IN_HOSTS)) {
-                putBuiltInHosts(true);
-            }
-            // Enable show tag translations if the country is CN
+        if ("zh".equals(Locale.getDefault().getLanguage())) {
+            // Enable show tag translations if the language is zh
             if (!sSettingsPre.contains(KEY_SHOW_TAG_TRANSLATIONS)) {
                 putShowTagTranslations(true);
             }
@@ -400,9 +404,9 @@ public class Settings {
     public static String getLaunchPageGalleryListSceneAction() {
         int value = getIntFromStr(KEY_LAUNCH_PAGE, DEFAULT_LAUNCH_PAGE);
         return switch (value) {
-            case 1 -> GalleryListScene.ACTION_SUBSCRIPTION;
-            case 2 -> GalleryListScene.ACTION_WHATS_HOT;
             case 3 -> GalleryListScene.ACTION_TOP_LIST;
+            case 2 -> GalleryListScene.ACTION_WHATS_HOT;
+            case 1 -> GalleryListScene.ACTION_SUBSCRIPTION;
             default -> GalleryListScene.ACTION_HOMEPAGE;
         };
     }
@@ -412,16 +416,7 @@ public class Settings {
     }
 
     public static int getDetailSize() {
-        return getIntFromStr(KEY_DETAIL_SIZE, DEFAULT_DETAIL_SIZE);
-    }
-
-    @DimenRes
-    public static int getDetailSizeResId() {
-        if (getDetailSize() == 1){
-            return R.dimen.gallery_list_column_width_short;
-        } else {
-            return R.dimen.gallery_list_column_width_long;
-        }
+        return dip2px(40 * getInt(KEY_DETAIL_SIZE, DEFAULT_DETAIL_SIZE));
     }
 
     public static int getListThumbSize() {
@@ -435,12 +430,16 @@ public class Settings {
     }
 
     public static int getThumbSize() {
-        return dip2px(getInt(KEY_THUMB_SIZE, DEFAULT_THUMB_SIZE));
+        return dip2px(40 * getInt(KEY_THUMB_SIZE, DEFAULT_THUMB_SIZE));
     }
 
     public static int dip2px(int dpValue) {
         final float scale = sContext.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * 40 * scale + 0.5f);
+        return (int) (dpValue * scale + 0.5f);
+    }
+
+    public static boolean getThumbShowTitle() {
+        return getBoolean(KEY_THUMB_SHOW_TITLE, DEFAULT_THUMB_SHOW_TITLE);
     }
 
     public static int getThumbResolution() {
@@ -459,16 +458,20 @@ public class Settings {
         return getBoolean(KEY_SHOW_COMMENTS, DEFAULT_SHOW_COMMENTS);
     }
 
+    public static int getPreviewNum() {
+        return getInt(KEY_PREVIEW_NUM, DEFAULT_PREVIEW_NUM);
+    }
+
+    public static int getPreviewSize() {
+        return dip2px(40 * getInt(KEY_PREVIEW_SIZE, DEFAULT_PREVIEW_SIZE));
+    }
+
     public static boolean getShowTagTranslations() {
         return getBoolean(KEY_SHOW_TAG_TRANSLATIONS, DEFAULT_SHOW_TAG_TRANSLATIONS);
     }
 
     public static void putShowTagTranslations(boolean value) {
         putBoolean(KEY_SHOW_TAG_TRANSLATIONS, value);
-    }
-
-    public static int getPreviewNum() {
-        return getInt(KEY_PREVIEW_NUM, DEFAULT_PREVIEW_NUM);
     }
 
     public static boolean getMeteredNetworkWarning() {
@@ -655,8 +658,17 @@ public class Settings {
         return getIntFromStr(KEY_PRELOAD_IMAGE, DEFAULT_PRELOAD_IMAGE);
     }
 
-    public static boolean getDownloadOriginImage() {
-        return getBoolean(KEY_DOWNLOAD_ORIGIN_IMAGE, DEFAULT_DOWNLOAD_ORIGIN_IMAGE);
+    public static boolean getDownloadOriginImage(boolean mode) {
+        int value = getIntFromStr(KEY_DOWNLOAD_ORIGIN_IMAGE, DEFAULT_DOWNLOAD_ORIGIN_IMAGE);
+        return switch (value) {
+            case 2 -> mode;
+            case 1 -> true;
+            default -> false;
+        };
+    }
+
+    public static boolean getSkipCopyImage() {
+        return getIntFromStr(KEY_DOWNLOAD_ORIGIN_IMAGE, DEFAULT_DOWNLOAD_ORIGIN_IMAGE) == 2;
     }
 
     public static String getSecurity() {
@@ -837,6 +849,14 @@ public class Settings {
         putInt(KEY_DEFAULT_FAV_SLOT, value);
     }
 
+    public static boolean getNeverAddFavNotes() {
+        return getBoolean(KEY_NEVER_ADD_FAV_NOTES, DEFAULT_NEVER_ADD_FAV_NOTES);
+    }
+
+    public static void putNeverAddFavNotes(boolean value) {
+        putBoolean(KEY_NEVER_ADD_FAV_NOTES, value);
+    }
+
     public static boolean getGuideQuickSearch() {
         return getBoolean(KEY_GUIDE_QUICK_SEARCH, DEFAULT_GUIDE_QUICK_SEARCH);
     }
@@ -930,6 +950,14 @@ public class Settings {
 
     public static void putQuickSearchTip(boolean value) {
         putBoolean(KEY_QUICK_SEARCH_TIP, value);
+    }
+
+    public static boolean getQSSaveProgress() {
+        return getBoolean(KEY_QS_SAVE_PROGRESS, DEFAULT_QS_SAVE_PROGRESS);
+    }
+
+    public static void putQSSaveProgress(boolean value) {
+        putBoolean(KEY_QS_SAVE_PROGRESS, value);
     }
 
     public static boolean getHasDefaultDownloadLabel() {

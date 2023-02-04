@@ -56,11 +56,13 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
     private String mKey;
     private String mUrl;
     private boolean mUseNetwork;
+    private boolean mHardware;
     private int mOffsetX = Integer.MIN_VALUE;
     private int mOffsetY = Integer.MIN_VALUE;
     private int mClipWidth = Integer.MIN_VALUE;
     private int mClipHeight = Integer.MIN_VALUE;
     private int mRetryType;
+    private boolean mStarted;
     private boolean mFailed;
     private boolean mLoadFromDrawable = false;
     private ImageBitmap imageBitmap;
@@ -107,8 +109,8 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
         if (!mLoadFromDrawable) {
             if (mFailed) {
                 onFailure();
-            } else if (mConaco.isLoading(this)) {
-                load(mKey, mUrl, mUseNetwork);
+            } else if (!mConaco.isLoading(this) && !mStarted) {
+                load(mKey, mUrl, mUseNetwork, mHardware);
             }
         }
     }
@@ -202,26 +204,33 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
     }
 
     public void load(String key, String url) {
-        load(key, url, true);
+        load(key, url, true, false);
     }
 
     public void load(String key, String url, boolean useNetwork) {
+        load(key, url, useNetwork, false);
+    }
+
+    public void load(String key, String url, boolean useNetwork, boolean hardware) {
         if (url == null || (key == null)) {
             return;
         }
 
+        mStarted = true;
         mFailed = false;
         clearRetry();
 
         mKey = key;
         mUrl = url;
         mUseNetwork = useNetwork;
+        mHardware = hardware;
 
         ConacoTask.Builder<ImageBitmap> builder = new ConacoTask.Builder<ImageBitmap>()
                 .setUnikery(this)
                 .setKey(key)
                 .setUrl(url)
-                .setUseNetwork(useNetwork);
+                .setUseNetwork(useNetwork)
+                .setHardware(hardware);
         mConaco.load(builder);
     }
 
@@ -300,6 +309,7 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
 
     @Override
     public void onFailure() {
+        mStarted = false;
         mFailed = true;
         clearDrawable();
         Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.image_failed);
@@ -318,6 +328,7 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
 
     @Override
     public void onCancel() {
+        mStarted = false;
         mFailed = false;
     }
 
@@ -349,12 +360,12 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
 
     @Override
     public void onClick(@NonNull View v) {
-        load(mKey, mUrl, true);
+        load(mKey, mUrl, true, mHardware);
     }
 
     @Override
     public boolean onLongClick(@NonNull View v) {
-        load(mKey, mUrl, true);
+        load(mKey, mUrl, true, mHardware);
         return true;
     }
 

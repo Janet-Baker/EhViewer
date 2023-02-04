@@ -27,16 +27,19 @@ import android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
 import android.graphics.ImageDecoder.DecodeException
 import android.graphics.ImageDecoder.ImageInfo
 import android.graphics.ImageDecoder.Source
-import android.graphics.PixelFormat
 import android.graphics.drawable.AnimatedImageDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.drawable.toDrawable
+import coil.decode.FrameDelayRewritingSource
+import com.hippo.Native
+import okio.Buffer
+import okio.BufferedSource
+import okio.buffer
+import okio.source
 import java.io.FileInputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import kotlin.jvm.Throws
-import kotlin.math.max
 import kotlin.math.min
 
 class Image private constructor(
@@ -52,21 +55,18 @@ class Image private constructor(
         mObtainedDrawable = null
         source?.let {
             mObtainedDrawable =
-                ImageDecoder.decodeDrawable(source) { decoder: ImageDecoder, info: ImageInfo, src: Source ->
+                ImageDecoder.decodeDrawable(source) { decoder: ImageDecoder, info: ImageInfo, _: Source ->
                     decoder.allocator = if (hardware) ALLOCATOR_DEFAULT else ALLOCATOR_SOFTWARE
                     // Sadly we must use software memory since we need copy it to tile buffer, fuck glgallery
                     // Idk it will cause how much performance regression
 
                     decoder.setTargetSampleSize(
-                        max(
-                            min(
-                                info.size.width / (2 * screenWidth),
-                                info.size.height / (2 * screenHeight)
-                            ), 1
-                        )
+                        min(
+                            info.size.width / (2 * screenWidth),
+                            info.size.height / (2 * screenHeight)
+                        ).coerceAtLeast(1)
                     )
-                    // Don't
-                } // Should we lazy decode it?
+                }
         }
         if (mObtainedDrawable == null) {
             mObtainedDrawable = drawable!!
@@ -82,12 +82,9 @@ class Image private constructor(
 
     @Synchronized
     fun recycle() {
-        if (mObtainedDrawable is AnimatedImageDrawable) {
-            (mObtainedDrawable as AnimatedImageDrawable?)?.stop()
-        }
-        if (mObtainedDrawable is BitmapDrawable) {
-            (mObtainedDrawable as BitmapDrawable?)?.bitmap?.recycle()
-        }
+        mObtainedDrawable ?: return
+        (mObtainedDrawable as? AnimatedImageDrawable)?.stop()
+        (mObtainedDrawable as? BitmapDrawable)?.bitmap?.recycle()
         mObtainedDrawable?.callback = null
         mObtainedDrawable = null
         mCanvas = null
@@ -164,7 +161,7 @@ class Image private constructor(
 
     val isOpaque: Boolean
         get() {
-            return mObtainedDrawable?.opacity == PixelFormat.OPAQUE
+            return mObtainedDrawable?.transparentRegion == null
         }
 
     companion object {
@@ -179,28 +176,48 @@ class Image private constructor(
 
         @Throws(DecodeException::class)
         @JvmStatic
-        fun decode(stream: FileInputStream, hardware: Boolean = true): Image {
-            val src = ImageDecoder.createSource(
-                stream.channel.map(
-                    FileChannel.MapMode.READ_ONLY, 0,
-                    stream.available().toLong()
-                )
+        fun decode(stream: FileInputStream, hardware: Boolean): Image {
+            val buffer = stream.channel.map(
+                FileChannel.MapMode.READ_ONLY, 0,
+                stream.available().toLong()
             )
-            return Image(src, hardware = hardware)
+            val source = if (checkIsGif(buffer)) {
+                rewriteSource(stream.source().buffer())
+            } else {
+                buffer
+            }
+            return Image(ImageDecoder.createSource(source), hardware = hardware)
         }
 
         @Throws(DecodeException::class)
         @JvmStatic
-        fun decode(buffer: ByteBuffer, hardware: Boolean = true, release: () -> Unit? = {}): Image {
-            val src = ImageDecoder.createSource(buffer)
-            return Image(src, hardware = hardware) {
-                release()
+        fun decode(buffer: ByteBuffer, hardware: Boolean, release: () -> Unit? = {}): Image {
+            return if (checkIsGif(buffer)) {
+                val rewritten = rewriteSource(Buffer().apply {
+                    write(buffer)
+                    release()
+                })
+                Image(ImageDecoder.createSource(rewritten), hardware = hardware)
+            } else {
+                Image(ImageDecoder.createSource(buffer), hardware = hardware) {
+                    release()
+                }
             }
         }
 
         @JvmStatic
         fun create(bitmap: Bitmap): Image {
             return Image(null, bitmap.toDrawable(Resources.getSystem()), false)
+        }
+
+        private fun rewriteSource(source: BufferedSource): ByteBuffer {
+            val bufferedSource = FrameDelayRewritingSource(source).buffer()
+            return ByteBuffer.wrap(bufferedSource.use { it.readByteArray() })
+        }
+
+        private fun checkIsGif(buffer: ByteBuffer): Boolean {
+            check(buffer.isDirect)
+            return Native.isGif(buffer)
         }
 
         @JvmStatic

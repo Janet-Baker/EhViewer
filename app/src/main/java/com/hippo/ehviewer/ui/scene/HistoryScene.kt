@@ -138,7 +138,6 @@ class HistoryScene : ToolbarScene() {
         val mFastScroller = ViewUtils.`$$`(content, R.id.fast_scroller) as FastScroller
         val mTip = ViewUtils.`$$`(view, R.id.tip) as TextView
         val mViewTransition = ViewTransition(content, mTip)
-        val resources = requireContext().resources
         val drawable = ContextCompat.getDrawable(requireContext(), R.drawable.big_history)
         drawable!!.setBounds(0, 0, drawable.intrinsicWidth, drawable.intrinsicHeight)
         mTip.setCompoundDrawables(null, drawable, null, null)
@@ -151,7 +150,7 @@ class HistoryScene : ToolbarScene() {
         val layoutManager = AutoStaggeredGridLayoutManager(
             0, StaggeredGridLayoutManager.VERTICAL
         )
-        layoutManager.setColumnSize(resources.getDimensionPixelOffset(Settings.getDetailSizeResId()))
+        layoutManager.setColumnSize(Settings.getDetailSize())
         layoutManager.setStrategy(AutoStaggeredGridLayoutManager.STRATEGY_MIN_SIZE)
         recyclerView.layoutManager = layoutManager
         recyclerView.clipToPadding = false
@@ -213,7 +212,6 @@ class HistoryScene : ToolbarScene() {
                 }
                 EhDB.clearHistoryInfo()
                 mAdapter.refresh()
-                mAdapter.notifyDataSetChanged()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
@@ -226,6 +224,18 @@ class HistoryScene : ToolbarScene() {
             return true
         }
         return false
+    }
+
+    fun isFavorited(gi: GalleryInfo): Boolean {
+        var favourited = gi.favoriteSlot != -2 || EhDB.containLocalFavorites(gi.gid)
+        if (!favourited) {
+            EhApplication.getGalleryDetailCache(requireContext()).get(gi.gid)?.isFavorited?.let {
+                favourited = it
+            } ?: let {
+                favourited = false
+            }
+        }
+        return favourited
     }
 
     fun onItemClick(view: View, gi: GalleryInfo): Boolean {
@@ -243,26 +253,30 @@ class HistoryScene : ToolbarScene() {
         val context = requireContext()
         val activity = mainActivity ?: return false
         val downloaded = mDownloadManager.getDownloadState(gi.gid) != DownloadInfo.STATE_INVALID
-        val favourited = gi.favoriteSlot != -2 || EhDB.containLocalFavorites(gi.gid)
+        val favourited = isFavorited(gi)
         val items = if (downloaded) arrayOf<CharSequence>(
             context.getString(R.string.read),
             context.getString(R.string.delete_downloads),
             context.getString(if (favourited) R.string.remove_from_favourites else R.string.add_to_favourites),
-            context.getString(R.string.download_move_dialog_title)
+            context.getString(R.string.delete),
+            context.getString(R.string.download_move_dialog_title),
         ) else arrayOf<CharSequence>(
             context.getString(R.string.read),
             context.getString(R.string.download),
-            context.getString(if (favourited) R.string.remove_from_favourites else R.string.add_to_favourites)
+            context.getString(if (favourited) R.string.remove_from_favourites else R.string.add_to_favourites),
+            context.getString(R.string.delete),
         )
         val icons = if (downloaded) intArrayOf(
             R.drawable.v_book_open_x24,
             R.drawable.v_delete_x24,
             if (favourited) R.drawable.v_heart_broken_x24 else R.drawable.v_heart_x24,
-            R.drawable.v_folder_move_x24
+            R.drawable.v_delete_x24,
+            R.drawable.v_folder_move_x24,
         ) else intArrayOf(
             R.drawable.v_book_open_x24,
             R.drawable.v_download_x24,
-            if (favourited) R.drawable.v_heart_broken_x24 else R.drawable.v_heart_x24
+            if (favourited) R.drawable.v_heart_broken_x24 else R.drawable.v_heart_x24,
+            R.drawable.v_delete_x24,
         )
         AlertDialog.Builder(context)
             .setTitle(EhUtils.getSuitableTitle(gi))
@@ -315,6 +329,14 @@ class HistoryScene : ToolbarScene() {
                     }
 
                     3 -> {
+                        val hi: HistoryInfo? = gi as? HistoryInfo
+                        hi?.let {
+                            EhDB.deleteHistoryInfo(hi)
+                            mAdapter.refresh()
+                        }
+                    }
+
+                    4 -> {
                         val labelRawList = EhApplication.getDownloadManager(context).labelList
                         val labelList: MutableList<String> = ArrayList(labelRawList.size + 1)
                         labelList.add(getString(R.string.default_download_label_name))
@@ -457,6 +479,10 @@ class HistoryScene : ToolbarScene() {
             viewHolder: RecyclerView.ViewHolder
         ): Int {
             return makeMovementFlags(0, ItemTouchHelper.LEFT)
+        }
+
+        override fun getSwipeThreshold(viewHolder: RecyclerView.ViewHolder): Float {
+            return 0.3f
         }
 
         override fun onMove(

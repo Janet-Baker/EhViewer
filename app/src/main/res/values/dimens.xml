@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2016 Hippo Seven
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,9 +52,6 @@
 
     <dimen name="gallery_padding_top_search_bar">64dp</dimen>
     <dimen name="gallery_padding_bottom_fab">80dp</dimen>
-
-    <dimen name="gallery_list_column_width_long">480dp</dimen>
-    <dimen name="gallery_list_column_width_short">320dp</dimen>
 
     <!-- 4dp - 4dp, 4dp for card padding -->
     <dimen name="search_layout_interval">0dp</dimen>

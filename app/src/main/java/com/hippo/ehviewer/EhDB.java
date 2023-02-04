@@ -234,7 +234,7 @@ public class EhDB {
 
     public static synchronized List<GalleryInfo> searchLocalFavorites(String query) {
         LocalFavoritesDao dao = db.localFavoritesDao();
-        List<LocalFavoriteInfo> list = dao.list();
+        List<LocalFavoriteInfo> list = dao.list("%" + query + "%");
         return new ArrayList<>(list);
     }
 
@@ -293,11 +293,6 @@ public class EhDB {
         }
     }
 
-    public static synchronized void updateQuickSearch(QuickSearch quickSearch) {
-        QuickSearchDao dao = db.quickSearchDao();
-        dao.update(quickSearch);
-    }
-
     public static synchronized void deleteQuickSearch(QuickSearch quickSearch) {
         QuickSearchDao dao = db.quickSearchDao();
         dao.delete(quickSearch);
@@ -325,10 +320,6 @@ public class EhDB {
         list.get(start).setTime(toTime);
 
         dao.update(list);
-    }
-
-    public static synchronized List<HistoryInfo> getHistoryList() {
-        return db.historyDao().list();
     }
 
     public static synchronized PagingSource<Integer, HistoryInfo> getHistoryLazyList() {
@@ -469,7 +460,7 @@ public class EhDB {
                     outputStream.write(buff, 0, read);
                 }
             } else {
-                return context.getString(R.string.cant_read_the_file);
+                return context.getString(R.string.settings_advanced_import_data_cant_read);
             }
             inputStream.close();
             outputStream.close();
@@ -483,7 +474,7 @@ public class EhDB {
                 upgradeDB(oldDB, oldVersion);
                 oldDB.setVersion(newVersion);
             } else if (oldVersion > newVersion) {
-                return context.getString(R.string.db_version_too_high);
+                return context.getString(R.string.settings_advanced_import_data_version_too_high);
             }
 
             // Crete temp room database from cache file
@@ -577,7 +568,7 @@ public class EhDB {
         } catch (Throwable e) {
             ExceptionUtils.throwIfFatal(e);
             // Ignore
-            return context.getString(R.string.cant_read_the_file);
+            return context.getString(R.string.settings_advanced_import_data_cant_read);
         }
     }
 }

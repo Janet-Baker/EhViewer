@@ -231,8 +231,6 @@ public class AdvancedFragment extends BasePreferenceFragment {
 
         Preference dumpLogcat = findPreference(KEY_DUMP_LOGCAT);
         Preference appLanguage = findPreference(KEY_APP_LANGUAGE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            appLanguage.setVisible(false);
         Preference importData = findPreference(KEY_IMPORT_DATA);
         Preference exportData = findPreference(KEY_EXPORT_DATA);
         Preference backupFavorite = findPreference(KEY_BACKUP_FAVORITE);
@@ -312,35 +310,34 @@ public class AdvancedFragment extends BasePreferenceFragment {
 
         EhRequest request = new EhRequest();
         request.setMethod(EhClient.METHOD_GET_FAVORITES);
-        request.setCallback(new EhClient.Callback() {
+        request.setCallback(new EhClient.Callback<FavoritesParser.Result>() {
             @Override
-            public void onSuccess(Object result) {
+            public void onSuccess(FavoritesParser.Result result) {
                 try {
-                    FavoritesParser.Result favResult = (FavoritesParser.Result) result;
-                    if (favResult.galleryInfoList.isEmpty()) {
+                    if (result.galleryInfoList.isEmpty()) {
                         showTip(R.string.settings_advanced_backup_favorite_nothing, BaseScene.LENGTH_SHORT);
                     } else {
-                        if (favTotal == 0 && favResult.countArray != null) {
+                        if (favTotal == 0 && result.countArray != null) {
                             int totalFav = 0;
                             for (int i = 0; i < 10; i++) {
-                                totalFav = totalFav + favResult.countArray[i];
+                                totalFav = totalFav + result.countArray[i];
                             }
-                            favTotal = (int) Math.ceil((double) totalFav / favResult.galleryInfoList.size());
+                            favTotal = (int) Math.ceil((double) totalFav / result.galleryInfoList.size());
                         }
 
                         String status = "(" + favIndex + "/" + favTotal + ")";
                         showTip(GetText.getString(R.string.settings_advanced_backup_favorite_start, status), BaseScene.LENGTH_SHORT);
                         Log.d("LocalFavorites", "now backup page " + status);
-                        EhDB.putLocalFavorites(favResult.galleryInfoList);
+                        EhDB.putLocalFavorites(result.galleryInfoList);
 
-                        if (favResult.nextPage != null) {
+                        if (result.next != null) {
                             try {
                                 Thread.sleep(Settings.getDownloadDelay());
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                             favIndex++;
-                            favListUrlBuilder.setNext(favResult.nextPage);
+                            favListUrlBuilder.setIndex(result.next, true);
                             request.setArgs(favListUrlBuilder.build(), Settings.getShowJpnTitle());
                             mClient.execute(request);
                         } else {
@@ -370,7 +367,7 @@ public class AdvancedFragment extends BasePreferenceFragment {
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
         String key = preference.getKey();
-        if (KEY_APP_LANGUAGE.equals(key) && Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        if (KEY_APP_LANGUAGE.equals(key)) {
             if ("system".equals(newValue)) {
                 LocaleDelegate.setDefaultLocale(LocaleDelegate.getSystemLocale());
             } else {
