@@ -6,4 +6,3 @@ manifest-merger-release-report.txt
 # Intellij
 *.iml
 /.cxx
-release

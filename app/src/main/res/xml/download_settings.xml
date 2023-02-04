@@ -32,11 +32,11 @@
 
     <SeekBarPreference
         android:defaultValue="16"
+        android:max="32"
         android:key="download_thread"
         android:title="@string/settings_download_multi_thread_download"
-        android:max="32"
-        app:iconSpaceReserved="false"
-        app:showSeekBarValue="true" />
+        app:showSeekBarValue="true"
+        app:iconSpaceReserved="false" />
 
     <rikka.preference.SimpleMenuPreference
         android:defaultValue="0"
