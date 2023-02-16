@@ -23,7 +23,7 @@ jobs:
 
       - name: Install NDK
         run: |
-          echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;25.1.8937393" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;25.2.9519653" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
 
       - name: Gradle Build
         uses: gradle/gradle-build-action@v2
@@ -33,20 +33,19 @@ jobs:
 
       - name: Rename Apks
         run: |
-          cp app/build/outputs/apk/release/app-universal-release.apk app/build/outputs/apk/release/EhViewer-NekoInverter-universal.apk
-          cp app/build/outputs/apk/release/app-arm64-v8a-release.apk app/build/outputs/apk/release/EhViewer-NekoInverter-arm64-v8a.apk
-          cp app/build/outputs/apk/release/app-x86_64-release.apk app/build/outputs/apk/release/EhViewer-NekoInverter-x86_64.apk
-          cp app/build/outputs/apk/release/app-x86-release.apk app/build/outputs/apk/release/EhViewer-NekoInverter-x86.apk
-          cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk app/build/outputs/apk/release/EhViewer-NekoInverter-armeabi-v7a.apk
+          cp app/build/outputs/apk/release/app-universal-release.apk app/build/outputs/apk/release/EhViewer-universal.apk
+          cp app/build/outputs/apk/release/app-arm64-v8a-release.apk app/build/outputs/apk/release/EhViewer-arm64-v8a.apk
+          cp app/build/outputs/apk/release/app-x86_64-release.apk app/build/outputs/apk/release/EhViewer-x86_64.apk
+          cp app/build/outputs/apk/release/app-x86-release.apk app/build/outputs/apk/release/EhViewer-x86.apk
+          cp app/build/outputs/apk/release/app-armeabi-v7a-release.apk app/build/outputs/apk/release/EhViewer-armeabi-v7a.apk
 
       - name: Releases
         uses: softprops/action-gh-release@v1
         with:
           body: Bump Version
           files: |
-            app/build/outputs/apk/release/EhViewer-NekoInverter-universal.apk
-            app/build/outputs/apk/release/EhViewer-NekoInverter-arm64-v8a.apk
-            app/build/outputs/apk/release/EhViewer-NekoInverter-x86_64.apk
-            app/build/outputs/apk/release/EhViewer-NekoInverter-x86.apk
-            app/build/outputs/apk/release/EhViewer-NekoInverter-armeabi-v7a.apk
-            app/build/outputs/mapping/release/mapping.txt
+            app/build/outputs/apk/release/EhViewer-universal.apk
+            app/build/outputs/apk/release/EhViewer-arm64-v8a.apk
+            app/build/outputs/apk/release/EhViewer-x86_64.apk
+            app/build/outputs/apk/release/EhViewer-x86.apk
+            app/build/outputs/apk/release/EhViewer-armeabi-v7a.apk
