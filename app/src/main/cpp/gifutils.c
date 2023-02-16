@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Tarsin Norbin
+ * Copyright 2023 Tarsin Norbin
  *
  * This file is part of EhViewer
  *
@@ -17,19 +17,14 @@
  * EhViewer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <jni.h>
 
-JNIEXPORT jint JNICALL
-Java_com_hippo_Native_getFd(JNIEnv *env, jclass clazz, jobject fileDescriptor) {
-    jint fd = -1;
-    jclass fdClass = (*env)->FindClass(env, "java/io/FileDescriptor");
+#define GIF_HEADER_87A "GIF87a"
+#define GIF_HEADER_89A "GIF89a"
 
-    if (fdClass != NULL) {
-        jfieldID fdClassDescriptorFieldID = (*env)->GetFieldID(env, fdClass, "descriptor", "I");
-        if (fdClassDescriptorFieldID != NULL && fileDescriptor != NULL) {
-            fd = (*env)->GetIntField(env, fileDescriptor, fdClassDescriptorFieldID);
-        }
-    }
-
-    return fd;
+JNIEXPORT jboolean JNICALL
+Java_com_hippo_Native_isGif(JNIEnv *env, jobject thiz, jobject buffer) {
+    void *addr = (*env)->GetDirectBufferAddress(env, buffer);
+    return !memcmp(addr, GIF_HEADER_87A, 6) || !memcmp(addr, GIF_HEADER_89A, 6);
 }

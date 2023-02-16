@@ -50,7 +50,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
-
     public static final int TYPE_INVALID = -1;
     public static final int TYPE_LIST = 0;
     public static final int TYPE_GRID = 1;
@@ -164,7 +163,7 @@ abstract class GalleryAdapter extends RecyclerView.Adapter<GalleryHolder> {
             }
             case TYPE_GRID -> {
                 int columnWidth = Settings.getThumbSize();
-                int textSize = columnWidth / 15;
+                int textSize = columnWidth / 14;
                 ViewGroup.LayoutParams lp = holder.category.getLayoutParams();
                 lp.width = columnWidth / 5;
                 lp.height = (int) (lp.width * 0.75);

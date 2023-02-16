@@ -239,6 +239,8 @@
     <string name="filter_the_tag">Block the tag \"%s\"?</string>
     <string name="tag_vote_up">Vote up</string>
     <string name="tag_vote_down">Vote down</string>
+    <string name="tag_vote_up_cancel">Cancel up-vote</string>
+    <string name="tag_vote_down_cancel">Cancel down-vote</string>
     <string name="tag_vote_successfully">Vote successfully</string>
     <string name="vote_failed">Vote failed</string>
     <!-- Gallery Info -->
@@ -659,7 +661,6 @@
     <string name="error_cant_save_image">Can\'t save image</string>
     <string name="error_invalid_number">Invalid number</string>
     <string name="error_please_login_first">Please log in first</string>
-    <string name="error_empty_html">Empty page</string>
     <string name="error_cannot_find_gallery">Couldn\'t find the gallery</string>
     <string name="error_something_wrong_happened">Something wrong happened</string>
     <string name="kokomade_tip">Settings-&gt;Eh-&gt;Gallery Site-&gt;e-hentai</string>

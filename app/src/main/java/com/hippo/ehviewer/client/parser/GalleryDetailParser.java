@@ -58,7 +58,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GalleryDetailParser {
-
     private static final Pattern PATTERN_ERROR = Pattern.compile("<div class=\"d\">\n<p>([^<]+)</p>");
     private static final Pattern PATTERN_DETAIL = Pattern.compile("var gid = (\\d+);.+?var token = \"([a-f0-9]+)\";.+?var apiuid = ([\\-\\d]+);.+?var apikey = \"([a-f0-9]+)\";", Pattern.DOTALL);
     private static final Pattern PATTERN_TORRENT = Pattern.compile("<a[^<>]*onclick=\"return popUp\\('([^']+)'[^)]+\\)\">Torrent Download[^<]+(\\d+)[^<]+</a");
@@ -370,12 +369,22 @@ public class GalleryDetailParser {
             group.groupName = nameSpace;
 
             Elements tags = element.child(1).children();
-            for (int i = 0, n = tags.size(); i < n; i++) {
-                String tag = tags.get(i).text();
+            for (Element tagi : tags) {
+                String tag = tagi.text();
                 // Sometimes parody tag is followed with '|' and english translate, just remove them
                 int index = tag.indexOf('|');
                 if (index >= 0) {
                     tag = tag.substring(0, index).trim();
+                }
+                // Vote status
+                if (tagi.child(0).hasClass("tup")) {
+                    tag = "_U" + tag;
+                } else if (tagi.child(0).hasClass("tdn")) {
+                    tag = "_D" + tag;
+                }
+                // Weak tag
+                if (tagi.hasClass("gtw")) {
+                    tag = "_W" + tag;
                 }
                 group.addTag(tag);
             }
